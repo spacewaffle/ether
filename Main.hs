@@ -5,6 +5,7 @@ import qualified Data.ByteString.Lazy as LBS
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import Data.Aeson
 
 main :: IO ()
 main = do
@@ -32,4 +33,9 @@ handleConnection pending = do
 
 {-
 http://hackage.haskell.org/package/websockets-0.10.0.0/docs/Network-WebSockets.html
+
+sendTextData :: WebSocketsData a => Connection -> a -> IO ()
+sendTextDatas :: WebSocketsData a => Connection -> [a] -> IO ()
+
+
 -}
