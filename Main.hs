@@ -10,6 +10,7 @@ import Data.Aeson
 import Control.Exception (finally)
 import Control.Monad (forM_, forever)
 import Control.Concurrent (MVar, newMVar, modifyMVar_, modifyMVar, readMVar)
+-- import Network.Wai.Handler.WebSockets
 
 type Client = (Text, Connection)
 type ServerState = [Client]
@@ -25,11 +26,16 @@ addClient client clients = client : clients
 removeClient :: Client -> ServerState -> ServerState
 removeClient client = filter ((/= fst client) . fst)
 
-
 parseWant :: LBS.ByteString -> Maybe Text
 parseWant = T.stripPrefix "I want " . T.decodeUtf8 . LBS.toStrict
 
-
+-- app :: MVar ServerState -> Application
+-- app state = websocketsOr defaultConnectionOptions 
+--               (handleConnection state) backupApp
+--   where
+--     backupApp :: Application
+--     backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
+-- 
 main :: IO ()
 main = do
   state <- newMVar []

@@ -24,4 +24,6 @@ executable ether
                      , containers
                      , websockets
                      , aeson
+                     , wai
+                     , wai-websockets 
 
