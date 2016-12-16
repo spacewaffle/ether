@@ -24,6 +24,10 @@ executable ether
                      , containers
                      , websockets
                      , aeson
+                     , wai-extra
+                     , scotty
+                     , warp
                      , wai
                      , wai-websockets 
+                     , http-types
 

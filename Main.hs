@@ -10,7 +10,13 @@ import Data.Aeson
 import Control.Exception (finally)
 import Control.Monad (forM_, forever)
 import Control.Concurrent (MVar, newMVar, modifyMVar_, modifyMVar, readMVar)
--- import Network.Wai.Handler.WebSockets
+import Network.Wai.Handler.Warp
+import Network.Wai.Handler.WebSockets
+import Network.Wai.UrlMap
+import Network.Wai
+import Network.HTTP.Types
+import Web.Scotty
+import Control.Applicative
 
 type Client = (Text, Connection)
 type ServerState = [Client]
@@ -29,13 +35,28 @@ removeClient client = filter ((/= fst client) . fst)
 parseWant :: LBS.ByteString -> Maybe Text
 parseWant = T.stripPrefix "I want " . T.decodeUtf8 . LBS.toStrict
 
--- app :: MVar ServerState -> Application
--- app state = websocketsOr defaultConnectionOptions 
---               (handleConnection state) backupApp
---   where
---     backupApp :: Application
---     backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
--- 
+
+-- scottyApp :: ScottyM () -> IO Application
+-- run :: Port -> Application -> IO ()
+
+myapp :: MVar ServerState -> IO Application
+myapp state = do
+  web <- scottyApp $ do 
+      get "/" $ 
+        text "hello"
+  return $
+    mapUrls $
+          mount "ws" (wsApp state)
+      <|> mountRoot web
+
+
+wsApp :: MVar ServerState -> Application
+wsApp state = websocketsOr defaultConnectionOptions 
+              (handleConnection state) backupApp
+  where
+    backupApp :: Application
+    backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
+
 main :: IO ()
 main = do
   state <- newMVar []
