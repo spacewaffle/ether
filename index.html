@@ -9,7 +9,6 @@
     <div id="chatbox" class="messages">
         <ul>
           <li v-for="message in messages">{{message}}</li>
-
         </ul>
         <br/>
         <input v-model='post' v-bind:value="'post'"
@@ -23,15 +22,45 @@
 <script>
 
 $(document).ready(function() {
+
+  var loc = window.location, new_uri;
+  if (loc.protocol === "https:") {
+      ws_uri = "wss:";
+  } else {
+      ws_uri = "ws:";
+  }
+  ws_uri += "//" + loc.host;
+  ws_uri += loc.pathname + "ws";
+  w = new WebSocket(ws_uri);
+
+  /*
+  new Vue({
+    el: '#root',
+
+  });
+  */
+
+
   var postComponent = new Vue({
     el: "#chatbox",
     data: { post: "", messages: [] },
     methods: {
       submit: function() {
         console.log("Submit: " + this.post)
+        w.send(this.post)
       }
+    },
+    mounted: function() {
     }
+
   })
+
+  w.onmessage = function(e) {
+     console.log("ws incoming: " + JSON.stringify(e))
+     postComponent.messages.push(e)
+  };
+
+
 });
 
 Vue.component('message', {
@@ -40,31 +69,6 @@ Vue.component('message', {
   `
 });
 
-
-var loc = window.location, new_uri;
-if (loc.protocol === "https:") {
-    ws_uri = "wss:";
-} else {
-    ws_uri = "ws:";
-}
-ws_uri += "//" + loc.host;
-ws_uri += loc.pathname + "ws";
-
-/*
-new Vue({
-  el: '#root',
-
-  mounted() {
-    w = new WebSocket(ws_uri);
-
-    w.onmessage = function(e) {
-      //replace this with actual stuff
-      console.log(e);
-    };
-  }
-
-});
-*/
 </script> 
 </body>
 </html>
