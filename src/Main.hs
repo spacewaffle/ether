@@ -14,9 +14,11 @@ main = do
 parseWant :: LBS.ByteString -> Maybe Text
 parseWant = T.stripPrefix "I want " . T.decodeUtf8 . LBS.toStrict
 
+handleConnection :: ServerApp
 handleConnection pending = do
   connection <- acceptRequest pending
-  let loop wants = do
+  let loop :: [Text] -> IO ()
+      loop wants = do
         commandMsg <- receiveDataMessage connection
         case commandMsg of
           Text (parseWant -> Just want) -> do
@@ -28,3 +30,6 @@ handleConnection pending = do
             loop wants
   loop []
 
+{-
+http://hackage.haskell.org/package/websockets-0.10.0.0/docs/Network-WebSockets.html
+-}
