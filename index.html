@@ -1,27 +1,37 @@
 <html>
 <head>
-<script src="https://unpkg.com/vue@2.1.6/dist/vue.js"></script>
+  <script src="https://unpkg.com/vue@2.1.6/dist/vue.js"></script>
+  <script src="http://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 
 </head>
 <body>
-<div id="root">
-  <messages>
-    <message>Whatever</messge>
-    <message>blah</message>
-  </messages>
-</div>
+  <div id="root">
+    <div id="chatbox" class="messages">
+        <ul>
+          <li v-for="message in messages">{{message}}</li>
+
+        </ul>
+        <br/>
+        <input v-model='post' v-bind:value="'post'"
+               size="50"
+               placeholder="Write your message"
+               v-on:keyup.13="submit()"
+               type="text"/>
+    </div>
+  </div>
 
 <script>
 
-Vue.component('messages', {
-  template: `
-    <div class="messages">
-        <ul>
-          <message></message>
-        </ul>
-    </div>
-
-  `
+$(document).ready(function() {
+  var postComponent = new Vue({
+    el: "#chatbox",
+    data: { post: "", messages: [] },
+    methods: {
+      submit: function() {
+        console.log("Submit: " + this.post)
+      }
+    }
+  })
 });
 
 Vue.component('message', {
@@ -30,11 +40,22 @@ Vue.component('message', {
   `
 });
 
+
+var loc = window.location, new_uri;
+if (loc.protocol === "https:") {
+    ws_uri = "wss:";
+} else {
+    ws_uri = "ws:";
+}
+ws_uri += "//" + loc.host;
+ws_uri += loc.pathname + "ws";
+
+/*
 new Vue({
   el: '#root',
 
   mounted() {
-    w = new WebSocket("some url");
+    w = new WebSocket(ws_uri);
 
     w.onmessage = function(e) {
       //replace this with actual stuff
@@ -43,7 +64,7 @@ new Vue({
   }
 
 });
-
+*/
 </script> 
 </body>
 </html>

@@ -43,7 +43,7 @@ myapp :: MVar ServerState -> IO Application
 myapp state = do
   web <- scottyApp $ do 
       get "/" $ 
-        text "hello"
+        file "index.html"
   return $
     mapUrls $
           mount "ws" (wsApp state)
@@ -60,7 +60,11 @@ wsApp state = websocketsOr defaultConnectionOptions
 main :: IO ()
 main = do
   state <- newMVar []
-  runServer "127.0.0.1" 8081 (handleConnection state)
+  let port = 8081
+  -- runServer "127.0.0.1" 8081 (handleConnection state)
+  putStrLn $ "Open browser at port " ++ show port
+  app <- myapp state
+  run port $ app
 
 handleConnection :: MVar ServerState -> ServerApp
 handleConnection state pending = do
