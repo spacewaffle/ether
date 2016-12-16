@@ -1,0 +1,49 @@
+<html>
+<head>
+<script src="https://unpkg.com/vue@2.1.6/dist/vue.js"></script>
+
+</head>
+<body>
+<div id="root">
+  <messages>
+    <message>Whatever</messge>
+    <message>blah</message>
+  </messages>
+</div>
+
+<script>
+
+Vue.component('messages', {
+  template: `
+    <div class="messages">
+        <ul>
+          <message></message>
+        </ul>
+    </div>
+
+  `
+});
+
+Vue.component('message', {
+  template: `
+    <li><slot></slot></li>
+  `
+});
+
+new Vue({
+  el: '#root',
+
+  mounted() {
+    w = new WebSocket("some url");
+
+    w.onmessage = function(e) {
+      //replace this with actual stuff
+      console.log(e);
+    };
+  }
+
+});
+
+</script> 
+</body>
+</html>
