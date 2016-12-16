@@ -17,13 +17,14 @@ import Network.Wai
 import Network.HTTP.Types
 import Web.Scotty
 import Control.Applicative
+import Data.Monoid
 
 type Client = (Text, Connection)
 type ServerState = [Client]
 
 broadcast :: Text -> ServerState -> IO ()
 broadcast message clients = do
-    T.putStrLn message
+    T.putStrLn $ "Broadcasting: " <> message
     forM_ clients $ \(_, conn) -> sendTextData conn message
 
 addClient :: Client -> ServerState -> ServerState
