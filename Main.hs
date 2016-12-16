@@ -4,32 +4,65 @@ import Network.WebSockets
 import qualified Data.ByteString.Lazy as LBS
 import Data.Text (Text)
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import qualified Data.Text.Encoding as T
 import Data.Aeson
+import Control.Exception (finally)
+import Control.Monad (forM_, forever)
+import Control.Concurrent (MVar, newMVar, modifyMVar_, modifyMVar, readMVar)
 
-main :: IO ()
-main = do
-  runServer "127.0.0.1" 8080 handleConnection
+type Client = (Text, Connection)
+type ServerState = [Client]
+
+broadcast :: Text -> ServerState -> IO ()
+broadcast message clients = do
+    T.putStrLn message
+    forM_ clients $ \(_, conn) -> sendTextData conn message
+
+addClient :: Client -> ServerState -> ServerState
+addClient client clients = client : clients
+
+removeClient :: Client -> ServerState -> ServerState
+removeClient client = filter ((/= fst client) . fst)
 
 
 parseWant :: LBS.ByteString -> Maybe Text
 parseWant = T.stripPrefix "I want " . T.decodeUtf8 . LBS.toStrict
 
-handleConnection :: ServerApp
-handleConnection pending = do
+
+main :: IO ()
+main = do
+  state <- newMVar []
+  runServer "127.0.0.1" 8081 (handleConnection state)
+
+handleConnection :: MVar ServerState -> ServerApp
+handleConnection state pending = do
   connection <- acceptRequest pending
-  let loop :: [Text] -> IO ()
-      loop wants = do
-        commandMsg <- receiveDataMessage connection
-        case commandMsg of
-          Text (parseWant -> Just want) -> do
-            sendTextData connection
-              ("Hohoho, as long as you've been good this year!" :: Text)
-            loop (want : wants)
-          _ -> do
-            sendTextData connection ("<img src=\"http://bit.ly/1kmRC7Q\" />" :: Text)
-            loop wants
-  loop []
+  forkPingThread connection 30
+  name <- receiveData connection
+  let client = (name , connection)
+  let disconnect = do
+          s <- modifyMVar state $ \s -> 
+              let s' :: ServerState
+                  s' = removeClient client s 
+              in return (s', s')
+          broadcast (fst client `mappend` " disconnected") s
+  flip finally disconnect $ do
+    modifyMVar_ state $ \s -> do
+      let s' = addClient client s
+      sendTextData connection $
+        "Welcome! Users: " `mappend`
+        T.intercalate ", " (map fst s)
+      broadcast (fst client `mappend` " joined") s'
+      return s'
+    talk connection state client
+
+
+talk :: Connection -> MVar ServerState -> Client -> IO ()
+talk conn state (user, _) = forever $ do
+  msg <- receiveData conn
+  readMVar state >>= broadcast
+    (user `mappend` ": " `mappend` msg)
 
 {-
 http://hackage.haskell.org/package/websockets-0.10.0.0/docs/Network-WebSockets.html
