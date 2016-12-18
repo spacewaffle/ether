@@ -48,6 +48,7 @@ $(document).ready(function() {
       submit: function() {
         console.log("Submit: " + this.post)
         w.send(this.post)
+        this.messages.push(this.post);
         this.post = "";
       }
     },
