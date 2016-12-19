@@ -41,26 +41,47 @@ $(document).ready(function() {
   });
   */
 
+  window.Event = new Vue();
 
   var postComponent = new Vue({
     el: "#chatbox",
-    data: { post: "", messages: [] },
+    data: { 
+      post: "", 
+      messages: [] 
+    },
     methods: {
       submit: function() {
         console.log("Submit: " + this.post)
         w.send(this.post)
         this.messages.push(this.post);
         this.post = "";
+      },
+      receivedMessage: function(data){
+        this.messages.push(data);
       }
     },
-    mounted: function() {
+    created: function() {
+      Event.$on("message", this.receivedMessage);
+
     }
 
   })
 
   w.onmessage = function(event) {
-     console.log("ws incoming: " + JSON.stringify(event.data))
-     postComponent.messages.push(event.data)
+    console.log("ws incoming: " + JSON.stringify(event.data))
+
+    Event.$emit("message", {event.data});
+  };
+  w.onopen = function(event){
+    Event.$emit("opened", {event.data});
+  };
+  w.onclose = function(event){
+    Event.$emit("closed", {event.data});
+
+  };
+  w.onerror = function(event){
+    Event.$emit("error", {event.data});
+
   };
 
 
