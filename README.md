@@ -2,4 +2,4 @@
 
 TBD
 
-tail -f log | ether >(tee log | ./split.sh)
+tail -f log | ether >(tee -a log | ./split.sh)
