@@ -41,10 +41,34 @@ instance FromJSON ChatMessage where
 
 instance ToJSON ChatMessage where
   toJSON ChatMessage{..} = object [
-      "name" .= chatName
+      "type" .= ("chat_message" :: Text)
+    , "name" .= chatName
     , "body" .= chatBody
     , "chan" .= chatChan
     ]
+
+instance FromJSON Join where
+  parseJSON (Object v) = 
+      Join <$> v .: "name" <*> v .: "chan"
+
+instance ToJSON Join where
+  toJSON (Join n ch) = object [
+      "type" .= ("join" :: Text)
+    , "name" .= n
+    , "chan" .= ch
+    ]
+
+instance FromJSON Leave where
+  parseJSON (Object v) = 
+      Leave <$> v .: "name" <*> v .: "chan"
+
+instance ToJSON Leave where
+  toJSON (Leave n ch) = object [
+      "type" .= ("leave" :: Text)
+    , "name" .= n
+    , "chan" .= ch
+    ]
+
 
 myapp :: Chan ServerEvent -> IO Application
 myapp chan0 = do
@@ -55,6 +79,11 @@ myapp chan0 = do
       post "/message" $ do
         undefined
         -- append to STDOUT or unix style file handle
+      post "/join" $ do
+        undefined
+      post "/leave" $ do
+        undefined
+
         
       get "/style.css" $
         file "style.css"
