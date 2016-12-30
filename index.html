@@ -10,7 +10,10 @@
   <div id="root">
     <div id="chatbox" class="messages" v-cloak>
         <ul>
-          <li v-for="message in messages">{{message.body}}</li>
+          <li v-for="message in messages">
+            [{{message.type}}]
+            {{message.name}}: {{message.body}}
+          </li>
         </ul>
         <br/>
         <input v-model='post' v-bind:value="'post'"
@@ -39,6 +42,8 @@ $(document).ready(function() {
 
 
   window.Event = new Vue();
+  var username  = ''
+  var chan  = 1 // change later to real channel number
 
   var postComponent = new Vue({
     el: "#chatbox",
@@ -50,7 +55,7 @@ $(document).ready(function() {
       submit: function() {
         console.log("Submit: " + this.post)
         // TODO assign channels later
-        var payload = {type: "chat_message", body: this.post, name: username, chan: 1};
+        var payload = {type: "chat_message", body: this.post, name: username, chan: chan}
         $.post("/message", JSON.stringify(payload));
         this.post = "";
       },
@@ -65,7 +70,6 @@ $(document).ready(function() {
 
   });
 
-  var username  = ''
   var usernameComponent = new Vue({
     el: "#username",
     data: { 
@@ -75,7 +79,7 @@ $(document).ready(function() {
     methods: {
       setUsername: function() {
         username = this.username;
-        var payload = {type: "join", name: this.username, chan: 1};
+        var payload = {type: "join", name: this.username, chan: chan};
         $.post("/message", JSON.stringify(payload));
         this.visible = false;
       }
@@ -85,7 +89,7 @@ $(document).ready(function() {
   evtSource.onmessage = function(event) {
     var data = JSON.parse(event.data)
     console.log("evtSource incoming: " + event.data)
-    Event.$emit("message", event.data);
+    Event.$emit("message", JSON.parse(event.data));
   };
 
   /* w.onopen = function(event){
