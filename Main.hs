@@ -132,7 +132,7 @@ myEventSourceApp src req sendResponse = do
             m :: Message <- src
             let se = filterChan chan m
             case join (fmap (eventToBuilder . mkServerEvent) se) of
-                Nothing -> return ()
+                Nothing -> loop
                 Just b  -> sendChunk b >> flush >> loop
 
 filterChan :: Text -> Message -> Maybe Message
@@ -160,7 +160,9 @@ main = do
         let v = decode line
         case v of
           Just v' -> writeChan chan0 v' 
-          _ -> return ()
+          _ -> do
+            hPutStrLn stderr $ "error reading input " ++ show v
+            return ()
         loop
   putStrLn "Running server"
   app <- myapp handle chan0
