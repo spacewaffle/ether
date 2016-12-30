@@ -86,6 +86,7 @@ myapp handle chan0 = do
         let message' = message { time = Just now }
         liftIO . BL8.hPutStrLn handle . encode $ message'
       get "/chan/:id" $ do
+        -- this should present a backlog of n messages from the file
         undefined
       get "/style.css" $ do
         setHeader "Content-Type" "text/css"
@@ -104,8 +105,8 @@ mkServerEvent s = ServerEvent Nothing Nothing [fromText . pack $ s]
 
 sseChan :: Chan ServerEvent -> IO Application
 sseChan chan0 = do
-    chan <- dupChan chan0
-    return $ eventSourceAppChan chan
+    -- next is to dynamically get the chat room
+    return $ eventSourceAppChan chan0
 
 main = do
   [file] <- getArgs
