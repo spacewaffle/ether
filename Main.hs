@@ -85,8 +85,10 @@ myapp handle chan0 = do
         let message' = message { time = Just now }
         liftIO . BL8.hPutStrLn handle . encode $ message'
       get "/style.css" $
+        setHeader "Content-Type" "text/css"
         file "style.css"
       get "/reset.css" $
+        setHeader "Content-Type" "text/css"
         file "reset.css"
 
   return $
