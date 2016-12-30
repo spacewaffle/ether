@@ -13,6 +13,7 @@ import Control.Concurrent.Chan
 import Control.Monad.IO.Class (liftIO)
 import Network.Wai.EventSource
 import Network.Wai.EventSource.EventStream
+import Network.HTTP.Types (status200, hContentType)
 import Web.Scotty
 import Control.Applicative
 import Data.Aeson
@@ -76,7 +77,7 @@ instance ToJSON Message where
 
 myapp :: Handle -> Chan ServerEvent -> IO Application
 myapp handle chan0 = do
-  sse <- sseChan chan0
+  let sse = sseChan chan0
   web <- scottyApp $ do 
       get "/" $ 
         file "index.html"
@@ -103,10 +104,26 @@ myapp handle chan0 = do
 mkServerEvent :: String -> ServerEvent
 mkServerEvent s = ServerEvent Nothing Nothing [fromText . pack $ s]
 
-sseChan :: Chan ServerEvent -> IO Application
-sseChan chan0 = do
-    -- next is to dynamically get the chat room
-    return $ eventSourceAppChan chan0
+sseChan :: Chan ServerEvent -> Application
+sseChan chan0 req sendResponse = do
+    chan' <- liftIO $ dupChan chan0
+    let q = queryString req
+    liftIO $ hPutStrLn stderr $ show q
+    myEventSourceApp (readChan chan') req sendResponse
+
+
+myEventSourceApp :: IO ServerEvent -> Application
+myEventSourceApp src req sendResponse = do
+    sendResponse $ responseStream
+        status200
+        [(hContentType, "text/event-stream")]
+        $ \sendChunk flush -> fix $ \loop -> do
+            se <- src
+            case eventToBuilder se of
+                Nothing -> return ()
+                Just b  -> sendChunk b >> flush >> loop
+
+
 
 main = do
   [file] <- getArgs
