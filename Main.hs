@@ -69,7 +69,7 @@ myapp handle chan0 = do
   sse <- sseChan chan0
   web <- scottyApp $ do 
       get "/" $ 
-        file "index-sse.html"
+        file "index.html"
       post "/message" $ do
         message :: Message <- jsonData
         liftIO . BL8.hPutStrLn handle . encode $ message

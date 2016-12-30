@@ -10,7 +10,7 @@
   <div id="root">
     <div id="chatbox" class="messages" v-cloak>
         <ul>
-          <li v-for="message in messages">{{message}}</li>
+          <li v-for="message in messages">{{message.body}}</li>
         </ul>
         <br/>
         <input v-model='post' v-bind:value="'post'"
@@ -24,7 +24,6 @@
              size="50"
              placeholder="Enter your username here"
              v-on:keyup.13="setUsername()"
-             v-bind:autofocus="focused"
              type="text"/>
       
     </div>
@@ -34,16 +33,10 @@
 
 $(document).ready(function() {
 
-  console.log('hello world')
   var loc = window.location, new_uri;
-  if (loc.protocol === "https:") {
-      ws_uri = "wss:";
-  } else {
-      ws_uri = "ws:";
-  }
-  ws_uri += "//" + loc.host;
-  ws_uri += loc.pathname + "ws";
-  w = new WebSocket(ws_uri);
+
+  var evtSource = new EventSource("/sse");
+
 
   window.Event = new Vue();
 
@@ -56,10 +49,13 @@ $(document).ready(function() {
     methods: {
       submit: function() {
         console.log("Submit: " + this.post)
-        w.send(this.post)
+        // TODO assign channels later
+        var payload = {type: "chat_message", body: this.post, name: "My Name", chan: 1};
+        $.post("/message", JSON.stringify(payload));
         this.post = "";
       },
       receivedMessage: function(data){
+        console.log("receivedMessage: " + data);
         this.messages.push(data);
       }
     },
@@ -74,33 +70,32 @@ $(document).ready(function() {
     data: { 
       username: "",
       visible: true,
-      focused: true
     },
     methods: {
       setUsername: function() {
-        w.send(this.username)
+        var payload = {type: "join", name: this.username, chan: 1};
+        $.post("/message", JSON.stringify(payload));
         this.visible = false;
-        $('#chatbox input').focus();
       }
     }
   });
 
-  w.onmessage = function(event) {
-    console.log("ws incoming: " + JSON.stringify(event.data))
-
+  evtSource.onmessage = function(event) {
+    var data = JSON.parse(event.data)
+    console.log("evtSource incoming: " + event.data)
     Event.$emit("message", event.data);
   };
-  w.onopen = function(event){
+
+  /* w.onopen = function(event){
     Event.$emit("opened", event.data);
   };
   w.onclose = function(event){
     Event.$emit("closed", event.data);
-
   };
   w.onerror = function(event){
     Event.$emit("error", event.data);
-
   };
+  */
 
 
 });
