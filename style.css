@@ -4,7 +4,8 @@ body{
 }
 ul {
   list-style-type: none;
-  padding: 15px;
+  padding: 0px 0px 92px 15px;
+
 }
 
 li{
@@ -29,10 +30,14 @@ input{
   height: 100%;
 }
 
+#chatbox input{
+  position: fixed;
+}
+
 #username{
   width: 100%;
   background-color: #d8d8d8;
-  position: absolute;
+  position: fixed;
   top: 0;
 }
 
