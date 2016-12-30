@@ -101,7 +101,7 @@ main = do
   forkIO $ do 
       fix $ \loop -> do
         line <- getLine 
-        putStrLn $ "Data: " ++ line
+        putStrLn line
         writeChan chan0 $ mkServerEvent line 
         loop
   putStrLn "Running server"
