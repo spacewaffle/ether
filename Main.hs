@@ -137,7 +137,7 @@ myEventSourceApp src req sendResponse = do
 filterChan :: Text -> Message -> Maybe Message
 filterChan "all" x = Just x
 filterChan chan' x = 
-    if (chan x) == chan' 
+    if (chan x) == chan' || (chan x) == "all"
     then Just x
     else Nothing
 
