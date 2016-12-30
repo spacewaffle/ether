@@ -65,5 +65,6 @@ executable testio
                      , wai
                      , http-types
                      , blaze-builder
+                     , transformers
 
 

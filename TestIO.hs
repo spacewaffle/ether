@@ -7,15 +7,17 @@ import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.UrlMap
 import Network.Wai
+import Control.Concurrent
+import Control.Concurrent.Chan
+import Control.Monad.IO.Class (liftIO)
 import Network.Wai.EventSource
 import Network.Wai.EventSource.EventStream
 import Web.Scotty
 import Control.Applicative
 
-myapp :: IO Application
-myapp = do
-  let getStream :: IO ServerEvent 
-      getStream = getLine >>= return . mkServerEvent
+myapp :: Chan ServerEvent -> IO Application
+myapp chan0 = do
+  sse <- sseChan chan0
   web <- scottyApp $ do 
       get "/" $ 
         file "index.html"
@@ -25,19 +27,31 @@ myapp = do
         file "reset.css"
   return $
     mapUrls $
-          mount "channel" (sseChan getStream)
+          mount "channel" (sse)
+      <|> mount "ws" (sse)
       <|> mountRoot web
 
 mkServerEvent :: String -> ServerEvent
 mkServerEvent s = ServerEvent Nothing Nothing [fromText . pack $  s]
 
-sseChan :: IO ServerEvent -> Application
-sseChan src = eventSourceAppIO src
+sseChan :: Chan ServerEvent -> IO Application
+sseChan chan0 = do
+    chan <- dupChan chan0
+    return $ eventSourceAppChan chan
 
 main = do
   let port = 8081
   putStrLn $ "App running on port " ++ show port
-  app <- myapp
+  chan0 <- newChan 
+  forkIO $ do 
+      fix $ \loop -> do
+        line <- getLine 
+        putStrLn $ "Data: " ++ line
+        writeChan chan0 $ mkServerEvent line 
+        loop
+  putStrLn "Running server"
+  app <- myapp chan0
+  putStrLn $ "port " ++ show port
   run port $ app
 
           
