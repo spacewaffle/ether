@@ -27,17 +27,17 @@ data Message =
       ChatMessage {
         chatName :: Text
       , chatBody :: Text
-      , chatChan :: Int
+      , chatChan :: Text
       , time :: Maybe UTCTime
       } 
     | Join { 
         joinName :: Text 
-      , joinChan :: Int
+      , joinChan :: Text
       , time :: Maybe UTCTime
       }
     | Leave { 
         leaveName :: Text 
-      , leaveChan :: Int
+      , leaveChan :: Text
       , time :: Maybe UTCTime
       } deriving Show
     -- a Ping type to signal still part of room?
