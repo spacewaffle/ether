@@ -8,6 +8,7 @@ import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.UrlMap
 import Network.Wai
+import Control.Monad (join)
 import Control.Concurrent
 import Control.Concurrent.Chan
 import Control.Monad.IO.Class (liftIO)
@@ -112,16 +113,17 @@ sseChan chan0 req sendResponse = do
 
 myEventSourceApp :: IO ServerEvent -> Application
 myEventSourceApp src req sendResponse = do
+    let q = queryString req
+        chan = join $ lookup "chan" q
+    -- TODO capture channel number
+    liftIO $ hPutStrLn stderr $ "chan: " ++ show chan
+
     sendResponse $ responseStream
         status200
         [(hContentType, "text/event-stream")]
         $ \sendChunk flush -> fix $ \loop -> do
             se <- src
 
-            let q = queryString req
-            -- [("chan",Just "1")]
-            -- TODO capture channel number
-            liftIO $ hPutStrLn stderr $ show q
 
             case eventToBuilder se of
                 Nothing -> return ()
