@@ -8,7 +8,7 @@
 </head>
 <body>
   <div id="root">
-    <div id="chatbox" class="messages">
+    <div id="chatbox" class="messages" v-cloak>
         <ul>
           <li v-for="message in messages">{{message}}</li>
         </ul>
@@ -18,6 +18,14 @@
                placeholder="Write your message"
                v-on:keyup.13="submit()"
                type="text"/>
+    </div>
+    <div id="username" v-if="visible">
+      <input v-model='username' v-bind:value="'username'"
+             size="50"
+             placeholder="Enter your username here"
+             v-on:keyup.13="setUsername()"
+             type="text"/>
+      
     </div>
   </div>
 
@@ -36,20 +44,13 @@ $(document).ready(function() {
   ws_uri += loc.pathname + "ws";
   w = new WebSocket(ws_uri);
 
-  /*
-  new Vue({
-    el: '#root',
-
-  });
-  */
-
   window.Event = new Vue();
 
   var postComponent = new Vue({
     el: "#chatbox",
     data: { 
-      post: "", 
-      messages: [] 
+      post: "",
+      messages: []
     },
     methods: {
       submit: function() {
@@ -64,10 +65,23 @@ $(document).ready(function() {
     },
     created: function() {
       Event.$on("message", this.receivedMessage);
-
     }
 
-  })
+  });
+
+  var usernameComponent = new Vue({
+    el: "#username",
+    data: { 
+      username: "",
+      visible: true,
+    },
+    methods: {
+      setUsername: function() {
+        w.send(this.username)
+        this.visible = false;
+      }
+    }
+  });
 
   w.onmessage = function(event) {
     console.log("ws incoming: " + JSON.stringify(event.data))

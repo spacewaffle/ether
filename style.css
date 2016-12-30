@@ -12,6 +12,10 @@ li{
   display: block;
 }
 
+[v-cloak] {
+  display: none;
+}
+
 input{
   bottom: 0;
   display: block;
@@ -21,6 +25,24 @@ input{
   font-size: 16px;
 }
 
-#root, #chatbox{
+#root, #chatbox, #username{
   height: 100%;
 }
+
+#username{
+  width: 100%;
+  background-color: #d8d8d8;
+  position: absolute;
+  top: 0;
+}
+
+#username input{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: 60px;
+  width: 300px;
+  text-align: center;
+}
+
