@@ -106,15 +106,11 @@ myapp handle chan0 = do
           mount "sse" sse
       <|> mountRoot web
 
-mkServerEvent :: Message -> ServerEvent
-mkServerEvent m = 
-    let json = T.decodeUtf8 . BL8.toStrict $ encode m
-    in ServerEvent Nothing Nothing [fromText json]
-
 sseChan :: Chan Message -> Application
 sseChan chan0 req sendResponse = do
     chan' <- liftIO $ dupChan chan0
     myEventSourceApp (readChan chan') req sendResponse
+
 
 
 myEventSourceApp :: IO Message -> Application
@@ -133,6 +129,11 @@ myEventSourceApp src req sendResponse = do
             case se of
                 Nothing -> loop
                 Just b  -> sendChunk b >> flush >> loop
+
+mkServerEvent :: Message -> ServerEvent
+mkServerEvent m = 
+    let json = T.decodeUtf8 . BL8.toStrict $ encode m
+    in ServerEvent Nothing Nothing [fromText json]
 
 filterChan :: Text -> Message -> Maybe Message
 filterChan "all" x = Just x
