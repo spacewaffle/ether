@@ -136,6 +136,7 @@ myEventSourceApp src req sendResponse = do
                 Just b  -> sendChunk b >> flush >> loop
 
 filterChan :: Text -> Message -> Maybe Message
+filterChan "all" x = Just x
 filterChan chan' x = 
     if (chan x) == chan' 
     then Just x
