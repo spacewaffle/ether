@@ -4,6 +4,10 @@
   <script src="http://code.jquery.com/jquery-3.1.1.min.js" integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8=" crossorigin="anonymous"></script>
 
   <link rel="stylesheet" href="reset.css">
+
+  <script src="https://cdn.jsdelivr.net/emojione/2.2.7/lib/js/emojione.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/emojione/2.2.7/assets/css/emojione.min.css"/>
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,7 +15,7 @@
     <div id="chatbox" class="messages" v-cloak>
         <ul>
           <li v-for="message in messages">
-            [{{message.type}}]
+            <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
             {{message.name}}: {{message.body}}
           </li>
         </ul>
@@ -27,6 +31,7 @@
              size="50"
              placeholder="Enter your username here"
              v-on:keyup.13="setUsername()"
+             v-bind:autofocus="focused"
              type="text"/>
       
     </div>
@@ -60,7 +65,6 @@ $(document).ready(function() {
         this.post = "";
       },
       receivedMessage: function(data){
-        console.log("receivedMessage: " + data);
         this.messages.push(data);
       }
     },
@@ -75,10 +79,12 @@ $(document).ready(function() {
     data: { 
       username: "",
       visible: true,
+      focused: true
     },
     methods: {
       setUsername: function() {
         username = this.username;
+        $('#chatbox input').focus();
         var payload = {type: "join", name: this.username, chan: chan};
         $.post("/message", JSON.stringify(payload));
         this.visible = false;
@@ -91,18 +97,6 @@ $(document).ready(function() {
     console.log("evtSource incoming: " + event.data)
     Event.$emit("message", JSON.parse(event.data));
   };
-
-  /* w.onopen = function(event){
-    Event.$emit("opened", event.data);
-  };
-  w.onclose = function(event){
-    Event.$emit("closed", event.data);
-  };
-  w.onerror = function(event){
-    Event.$emit("error", event.data);
-  };
-  */
-
 
 });
 
