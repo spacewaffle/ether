@@ -95,7 +95,7 @@ myapp handle chan0 = do
       <|> mountRoot web
 
 mkServerEvent :: String -> ServerEvent
-mkServerEvent s = ServerEvent Nothing Nothing [fromText . pack $  s]
+mkServerEvent s = ServerEvent Nothing Nothing [fromText . pack $ s]
 
 sseChan :: Chan ServerEvent -> IO Application
 sseChan chan0 = do
