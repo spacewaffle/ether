@@ -1,3 +1,26 @@
+body{
+  font-size: 16px;
+  font-family: sans-serif;
+}
 ul {
   list-style-type: none;
+  padding: 15px;
+}
+
+li{
+  margin: 10px 0;
+  display: block;
+}
+
+input{
+  bottom: 0;
+  display: block;
+  position: absolute;
+  padding: 15px;
+  width: 100%;
+  font-size: 16px;
+}
+
+#root, #chatbox{
+  height: 100%;
 }

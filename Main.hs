@@ -47,6 +47,8 @@ myapp state = do
         file "index.html"
       get "/style.css" $
         file "style.css"
+      get "/reset.css" $
+        file "reset.css"
   return $
     mapUrls $
           mount "ws" (wsApp state)
