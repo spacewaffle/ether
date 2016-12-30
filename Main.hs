@@ -84,10 +84,10 @@ myapp handle chan0 = do
         now <- liftIO getCurrentTime
         let message' = message { time = Just now }
         liftIO . BL8.hPutStrLn handle . encode $ message'
-      get "/style.css" $
+      get "/style.css" $ do
         setHeader "Content-Type" "text/css"
         file "style.css"
-      get "/reset.css" $
+      get "/reset.css" $ do
         setHeader "Content-Type" "text/css"
         file "reset.css"
 
