@@ -24,6 +24,7 @@
              size="50"
              placeholder="Enter your username here"
              v-on:keyup.13="setUsername()"
+             v-bind:autofocus="focused"
              type="text"/>
       
     </div>
@@ -73,11 +74,13 @@ $(document).ready(function() {
     data: { 
       username: "",
       visible: true,
+      focused: true
     },
     methods: {
       setUsername: function() {
         w.send(this.username)
         this.visible = false;
+        $('#chatbox input').focus();
       }
     }
   });
