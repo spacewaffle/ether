@@ -101,7 +101,6 @@ myapp handle chan0 = do
       get "/reset.css" $ do
         setHeader "Content-Type" "text/css"
         file "reset.css"
-
   return $
     mapUrls $
           mount "sse" sse
@@ -141,8 +140,6 @@ filterChan chan' x =
     if (chan x) == chan' 
     then Just x
     else Nothing
-  
-
 
 main = do
   [file] <- getArgs
