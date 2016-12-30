@@ -44,7 +44,7 @@ myapp :: MVar ServerState -> IO Application
 myapp state = do
   web <- scottyApp $ do 
       get "/" $ 
-        file "index.html"
+        file "index-ws.html"
       get "/style.css" $
         file "style.css"
       get "/reset.css" $
