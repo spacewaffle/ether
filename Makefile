@@ -1,8 +1,6 @@
 
 
 all: build-haskell
-	
-
 
 .PHONY: build-haskell
 build-haskell:

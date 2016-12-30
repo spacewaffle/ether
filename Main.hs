@@ -1,110 +1,113 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables, ViewPatterns #-} 
+{-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables #-} 
 module Main where
-import Network.WebSockets
-import qualified Data.ByteString.Lazy as LBS
-import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.Text.IO as T
-import qualified Data.Text.Encoding as T
-import Data.Aeson
-import Control.Exception (finally)
-import Control.Monad (forM_, forever)
-import Control.Concurrent (MVar, newMVar, modifyMVar_, modifyMVar, readMVar)
+import Blaze.ByteString.Builder.Char.Utf8  (fromText)
+import qualified Data.ByteString.Lazy.Char8 as BL8
+import Data.Function (fix)
+import Data.Text (Text, pack)
+import Network.Wai
 import Network.Wai.Handler.Warp
-import Network.Wai.Handler.WebSockets
 import Network.Wai.UrlMap
 import Network.Wai
-import Network.HTTP.Types
+import Control.Concurrent
+import Control.Concurrent.Chan
+import Control.Monad.IO.Class (liftIO)
+import Network.Wai.EventSource
+import Network.Wai.EventSource.EventStream
 import Web.Scotty
 import Control.Applicative
-import Data.Monoid
+import Data.Aeson
+import System.IO
+import System.Environment
 
-type Client = (Text, Connection)
-type ServerState = [Client]
+data Message = 
+      ChatMessage {
+        chatName :: Text
+      , chatBody :: Text
+      , chatChan :: Int
+      } 
+    | Join { 
+        joinName :: Text 
+      , joinChan :: Int
+      }
+    | Leave { 
+      leaveName :: Text 
+    , leaveChan :: Int
+    } deriving Show
 
-broadcast :: Text -> ServerState -> IO ()
-broadcast message clients = do
-    T.putStrLn $ "Broadcasting: " <> message
-    forM_ clients $ \(_, conn) -> sendTextData conn message
+instance FromJSON Message where
+  parseJSON (Object v) = 
+    (v .: "type") >>= \x ->
+      case x of 
+        ("chat_message" :: Text) -> 
+          ChatMessage <$> v .: "name"
+                      <*> v .: "body"
+                      <*> v .: "chan"
+        "join" -> Join <$> v .: "name" <*> v .: "chan"
+        "leave" -> Leave <$> v .: "name" <*> v .: "chan"
+        y -> error $ "Unrecognized Message type: " ++ show y
 
-addClient :: Client -> ServerState -> ServerState
-addClient client clients = client : clients
+instance ToJSON Message where
+  toJSON ChatMessage{..} = object [
+      "type" .= ("chat_message" :: Text)
+    , "name" .= chatName
+    , "body" .= chatBody
+    , "chan" .= chatChan
+    ]
+  toJSON (Join n ch) = object [
+      "type" .= ("join" :: Text)
+    , "name" .= n
+    , "chan" .= ch
+    ]
+  toJSON (Leave n ch) = object [
+      "type" .= ("leave" :: Text)
+    , "name" .= n
+    , "chan" .= ch
+    ]
 
-removeClient :: Client -> ServerState -> ServerState
-removeClient client = filter ((/= fst client) . fst)
-
-parseWant :: LBS.ByteString -> Maybe Text
-parseWant = T.stripPrefix "I want " . T.decodeUtf8 . LBS.toStrict
-
-
--- scottyApp :: ScottyM () -> IO Application
--- run :: Port -> Application -> IO ()
-
-myapp :: MVar ServerState -> IO Application
-myapp state = do
+myapp :: Handle -> Chan ServerEvent -> IO Application
+myapp handle chan0 = do
+  sse <- sseChan chan0
   web <- scottyApp $ do 
       get "/" $ 
-        file "index.html"
+        file "index-sse.html"
+      post "/message" $ do
+        message :: Message <- jsonData
+        liftIO . BL8.hPutStrLn handle . encode $ message
       get "/style.css" $
         file "style.css"
       get "/reset.css" $
         file "reset.css"
+
   return $
     mapUrls $
-          mount "ws" (wsApp state)
+          mount "sse" sse
       <|> mountRoot web
 
+mkServerEvent :: String -> ServerEvent
+mkServerEvent s = ServerEvent Nothing Nothing [fromText . pack $  s]
 
-wsApp :: MVar ServerState -> Application
-wsApp state = websocketsOr defaultConnectionOptions 
-              (handleConnection state) backupApp
-  where
-    backupApp :: Application
-    backupApp _ respond = respond $ responseLBS status400 [] "Not a WebSocket request"
+sseChan :: Chan ServerEvent -> IO Application
+sseChan chan0 = do
+    chan <- dupChan chan0
+    return $ eventSourceAppChan chan
 
-main :: IO ()
 main = do
-  state <- newMVar []
+  [file] <- getArgs
+  handle <- openFile file AppendMode
+  hSetBuffering handle LineBuffering
   let port = 8081
-  -- runServer "127.0.0.1" 8081 (handleConnection state)
-  putStrLn $ "Open browser at port " ++ show port
-  app <- myapp state
+  putStrLn $ "App running on port " ++ show port
+  chan0 <- newChan 
+  forkIO $ do 
+      fix $ \loop -> do
+        line <- getLine 
+        putStrLn $ "Data: " ++ line
+        writeChan chan0 $ mkServerEvent line 
+        loop
+  putStrLn "Running server"
+  app <- myapp handle chan0
+  putStrLn $ "port " ++ show port
   run port $ app
 
-handleConnection :: MVar ServerState -> ServerApp
-handleConnection state pending = do
-  connection <- acceptRequest pending
-  forkPingThread connection 30
-  name <- receiveData connection
-  let client = (name , connection)
-  let disconnect = do
-          s <- modifyMVar state $ \s -> 
-              let s' :: ServerState
-                  s' = removeClient client s 
-              in return (s', s')
-          broadcast (fst client `mappend` " disconnected") s
-  flip finally disconnect $ do
-    modifyMVar_ state $ \s -> do
-      let s' = addClient client s
-      sendTextData connection $
-        "Welcome! Users: " `mappend`
-        T.intercalate ", " (map fst s)
-      broadcast (fst client `mappend` " joined") s'
-      return s'
-    talk connection state client
-
-
-talk :: Connection -> MVar ServerState -> Client -> IO ()
-talk conn state (user, _) = forever $ do
-  msg <- receiveData conn
-  readMVar state >>= broadcast
-    (user `mappend` ": " `mappend` msg)
-
-{-
-http://hackage.haskell.org/package/websockets-0.10.0.0/docs/Network-WebSockets.html
-
-sendTextData :: WebSocketsData a => Connection -> a -> IO ()
-sendTextDatas :: WebSocketsData a => Connection -> [a] -> IO ()
-
-
--}
+          
+         

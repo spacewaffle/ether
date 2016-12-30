@@ -55,6 +55,7 @@ $(document).ready(function() {
         this.post = "";
       },
       receivedMessage: function(data){
+        console.log("receivedMessage: " + data);
         this.messages.push(data);
       }
     },
@@ -72,7 +73,8 @@ $(document).ready(function() {
     },
     methods: {
       setUsername: function() {
-        // w.send(this.username)
+        var payload = {type: "join", name: this.username, chan: 1};
+        $.post("/message", JSON.stringify(payload));
         this.visible = false;
       }
     }
