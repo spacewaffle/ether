@@ -38,6 +38,7 @@ data Message =
       , leaveChan :: Int
       , time :: Maybe UTCTime
       } deriving Show
+    -- a Ping type to signal still part of room?
 
 instance FromJSON Message where
   parseJSON (Object v) = 
@@ -84,6 +85,8 @@ myapp handle chan0 = do
         now <- liftIO getCurrentTime
         let message' = message { time = Just now }
         liftIO . BL8.hPutStrLn handle . encode $ message'
+      get "/chan/:id" $ do
+        undefined
       get "/style.css" $ do
         setHeader "Content-Type" "text/css"
         file "style.css"
