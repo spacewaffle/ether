@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables #-} 
+{-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables, BangPatterns #-} 
 module Main where
 import Blaze.ByteString.Builder.Char.Utf8  (fromText)
 import qualified Data.ByteString.Lazy.Char8 as BL8
@@ -111,13 +111,10 @@ sseChan chan0 req sendResponse = do
     chan' <- liftIO $ dupChan chan0
     myEventSourceApp (readChan chan') req sendResponse
 
-
-
 myEventSourceApp :: IO Message -> Application
 myEventSourceApp src req sendResponse = do
     let q = queryToQueryText $ queryString req
         chanName = fromMaybe "all" $ join $ lookup "chan" q
-
     sendResponse $ responseStream
         status200
         [(hContentType, "text/event-stream")]
@@ -153,7 +150,7 @@ main = do
   chan0 :: Chan Message <- newChan 
   forkIO $ do 
       fix $ \loop -> do
-        line <- BL8.pack <$> getLine 
+        !line <- BL8.pack <$> getLine 
         BL8.putStrLn line
         let v = decode line
         case v of

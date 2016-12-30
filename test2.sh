@@ -1,7 +1,8 @@
 
-for x in $(seq 1 100) ; do
+for x in $(seq 1 70) ; do
   echo $x
   curl http://localhost:8081/sse?chan=a &
+  sleep 0.01
 done
 
 for x in $(seq 1 100) ; do
