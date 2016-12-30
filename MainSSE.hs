@@ -20,22 +20,31 @@ data ChatMessage =
       ChatMessage {
         chatName :: Text
       , chatBody :: Text
+      , chatChan :: Int
       } deriving Show
 
-data Join = Join { joinName :: Text }
+data Join = Join { 
+      joinName :: Text 
+    , joinChan :: Int
+    }
 
-data Leave = Leave { leaveName :: Text }
+data Leave = Leave { 
+      leaveName :: Text 
+    , leaveChan :: Int
+    }
 
 instance FromJSON ChatMessage where
-  parseJSON (Object v) = ChatMessage <$> v .: "name"
-                                     <*> v .: "body"
+  parseJSON (Object v) = 
+      ChatMessage <$> v .: "name"
+                  <*> v .: "body"
+                  <*> v .: "chan"
 
 instance ToJSON ChatMessage where
   toJSON ChatMessage{..} = object [
       "name" .= chatName
     , "body" .= chatBody
+    , "chan" .= chatChan
     ]
-
 
 myapp :: Chan ServerEvent -> IO Application
 myapp chan0 = do
