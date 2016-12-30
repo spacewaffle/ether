@@ -130,7 +130,9 @@ myEventSourceApp src req sendResponse = do
         $ \sendChunk flush -> fix $ \loop -> do
             m :: Message <- src
             let se = filterChan chan m
-            case join (fmap (eventToBuilder . mkServerEvent) se) of
+                     >>= Just . mkServerEvent
+                     >>= eventToBuilder
+            case se of
                 Nothing -> loop
                 Just b  -> sendChunk b >> flush >> loop
 
