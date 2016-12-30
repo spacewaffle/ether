@@ -68,10 +68,13 @@ $(document).ready(function() {
 
   var evtSource = new EventSource("/sse" + window.location.search);
 
+  // extract chan from query param chan=n
+  var match = window.location.search.match(/chan=([^&]+)/),
+      chan = match && match[1];
 
   window.Event = new Vue();
   var username  = ''
-  var chan  = 1 // change later to real channel number
+  var chan  = chan || 1 // change later to real channel number
 
   var postComponent = new Vue({
     el: "#chatbox",
