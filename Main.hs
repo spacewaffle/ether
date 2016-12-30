@@ -2,6 +2,7 @@
 module Main where
 import Blaze.ByteString.Builder.Char.Utf8  (fromText)
 import qualified Data.ByteString.Lazy.Char8 as BL8
+import qualified Data.ByteString.Char8 as B8
 import Data.Function (fix)
 import Data.Text (Text, pack)
 import qualified Data.Text.Encoding as T
@@ -9,6 +10,7 @@ import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.UrlMap
 import Network.Wai
+import Network.HTTP.Types
 import Control.Monad (join)
 import Control.Concurrent
 import Control.Concurrent.Chan
@@ -23,22 +25,23 @@ import System.IO
 import System.Environment
 import Data.Time.Clock
 import Data.Monoid
+import Data.Maybe
 
 data Message = 
       ChatMessage {
         chatName :: Text
       , chatBody :: Text
-      , chatChan :: Text
+      , chan :: Text
       , time :: Maybe UTCTime
       } 
     | Join { 
         joinName :: Text 
-      , joinChan :: Text
+      , chan :: Text
       , time :: Maybe UTCTime
       }
     | Leave { 
         leaveName :: Text 
-      , leaveChan :: Text
+      , chan :: Text
       , time :: Maybe UTCTime
       } deriving Show
     -- a Ping type to signal still part of room?
@@ -61,7 +64,7 @@ instance ToJSON Message where
       "type" .= ("chat_message" :: Text)
     , "name" .= chatName
     , "body" .= chatBody
-    , "chan" .= chatChan
+    , "chan" .= chan
     , "time" .= time
     ]
   toJSON (Join n ch t) = object [
@@ -117,8 +120,8 @@ sseChan chan0 req sendResponse = do
 
 myEventSourceApp :: IO Message -> Application
 myEventSourceApp src req sendResponse = do
-    let q = queryString req
-        chan = join $ lookup "chan" q
+    let q = queryToQueryText $ queryString req
+        chan = fromMaybe "all" $ join $ lookup "chan" q
     -- capture channel number
     liftIO $ hPutStrLn stderr $ "chan: " ++ show chan
 
@@ -126,15 +129,17 @@ myEventSourceApp src req sendResponse = do
         status200
         [(hContentType, "text/event-stream")]
         $ \sendChunk flush -> fix $ \loop -> do
-            se :: Message <- src
-            -- filter to chan
-            case eventToBuilder (mkServerEvent se) of
+            m :: Message <- src
+            let se = filterChan chan m
+            case join (fmap (eventToBuilder . mkServerEvent) se) of
                 Nothing -> return ()
                 Just b  -> sendChunk b >> flush >> loop
 
--- filterChan :: String -> Maybe Value
--- filterChan x = 
-    
+filterChan :: Text -> Message -> Maybe Message
+filterChan chan' x = 
+    if (chan x) == chan' 
+    then Just x
+    else Nothing
   
 
 
