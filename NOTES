@@ -27,3 +27,6 @@ To federate, put behind nginx and make an instance of the server serve
 a certain namespace, range of letters, etc.
 
 Trust the unix streams
+
+
+tail -f log | ether >(tee log | cat -n)
