@@ -16,53 +16,48 @@ import Web.Scotty
 import Control.Applicative
 import Data.Aeson
 
-data ChatMessage = 
+data Message = 
       ChatMessage {
         chatName :: Text
       , chatBody :: Text
       , chatChan :: Int
-      } deriving Show
-
-data Join = Join { 
-      joinName :: Text 
-    , joinChan :: Int
-    }
-
-data Leave = Leave { 
+      } 
+    | Join { 
+        joinName :: Text 
+      , joinChan :: Int
+      }
+    | Leave { 
       leaveName :: Text 
     , leaveChan :: Int
-    }
+    } deriving Show
 
-instance FromJSON ChatMessage where
+instance FromJSON Message where
   parseJSON (Object v) = 
-      ChatMessage <$> v .: "name"
-                  <*> v .: "body"
-                  <*> v .: "chan"
+    (v .: "type") >>= \x ->
+      case x of 
+        ("chat_message" :: Text) -> 
+          ChatMessage <$> v .: "name"
+                      <*> v .: "body"
+                      <*> v .: "chan"
+        "join" -> 
+          Join <$> v .: "name" <*> v .: "chan"
+        "leave" -> 
+          Leave <$> v .: "name" <*> v .: "chan"
+        y -> error $ "Unrecognized Message type: " ++ show y
 
-instance ToJSON ChatMessage where
+
+instance ToJSON Message where
   toJSON ChatMessage{..} = object [
       "type" .= ("chat_message" :: Text)
     , "name" .= chatName
     , "body" .= chatBody
     , "chan" .= chatChan
     ]
-
-instance FromJSON Join where
-  parseJSON (Object v) = 
-      Join <$> v .: "name" <*> v .: "chan"
-
-instance ToJSON Join where
   toJSON (Join n ch) = object [
       "type" .= ("join" :: Text)
     , "name" .= n
     , "chan" .= ch
     ]
-
-instance FromJSON Leave where
-  parseJSON (Object v) = 
-      Leave <$> v .: "name" <*> v .: "chan"
-
-instance ToJSON Leave where
   toJSON (Leave n ch) = object [
       "type" .= ("leave" :: Text)
     , "name" .= n
