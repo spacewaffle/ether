@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables #-} 
 module Main where
 import Blaze.ByteString.Builder.Char.Utf8  (fromText)
+import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Function (fix)
 import Data.Text (Text, pack)
 import Network.Wai
@@ -15,6 +16,8 @@ import Network.Wai.EventSource.EventStream
 import Web.Scotty
 import Control.Applicative
 import Data.Aeson
+import System.IO
+import System.Environment
 
 data Message = 
       ChatMessage {
@@ -39,12 +42,9 @@ instance FromJSON Message where
           ChatMessage <$> v .: "name"
                       <*> v .: "body"
                       <*> v .: "chan"
-        "join" -> 
-          Join <$> v .: "name" <*> v .: "chan"
-        "leave" -> 
-          Leave <$> v .: "name" <*> v .: "chan"
+        "join" -> Join <$> v .: "name" <*> v .: "chan"
+        "leave" -> Leave <$> v .: "name" <*> v .: "chan"
         y -> error $ "Unrecognized Message type: " ++ show y
-
 
 instance ToJSON Message where
   toJSON ChatMessage{..} = object [
@@ -64,22 +64,15 @@ instance ToJSON Message where
     , "chan" .= ch
     ]
 
-
-myapp :: Chan ServerEvent -> IO Application
-myapp chan0 = do
+myapp :: Handle -> Chan ServerEvent -> IO Application
+myapp handle chan0 = do
   sse <- sseChan chan0
   web <- scottyApp $ do 
       get "/" $ 
-        file "index.html"
+        file "index-sse.html"
       post "/message" $ do
-        undefined
-        -- append to STDOUT or unix style file handle
-      post "/join" $ do
-        undefined
-      post "/leave" $ do
-        undefined
-
-        
+        message :: Message <- jsonData
+        liftIO . BL8.hPutStrLn handle . encode $ message
       get "/style.css" $
         file "style.css"
       get "/reset.css" $
@@ -99,6 +92,9 @@ sseChan chan0 = do
     return $ eventSourceAppChan chan
 
 main = do
+  [file] <- getArgs
+  handle <- openFile file AppendMode
+  hSetBuffering handle LineBuffering
   let port = 8081
   putStrLn $ "App running on port " ++ show port
   chan0 <- newChan 
@@ -109,7 +105,7 @@ main = do
         writeChan chan0 $ mkServerEvent line 
         loop
   putStrLn "Running server"
-  app <- myapp chan0
+  app <- myapp handle chan0
   putStrLn $ "port " ++ show port
   run port $ app
 
