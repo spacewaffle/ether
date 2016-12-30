@@ -53,8 +53,7 @@ instance FromJSON Message where
         y -> error $ "Unrecognized Message type: " ++ show y
 
 instance ToJSON Message where
-  toJSON ChatMessage{..} = object 
-    [
+  toJSON ChatMessage{..} = object [
       "type" .= ("chat_message" :: Text)
     , "name" .= chatName
     , "body" .= chatBody
