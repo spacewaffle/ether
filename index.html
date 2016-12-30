@@ -71,17 +71,17 @@ $(document).ready(function() {
   w.onmessage = function(event) {
     console.log("ws incoming: " + JSON.stringify(event.data))
 
-    Event.$emit("message", {event.data});
+    Event.$emit("message", event.data);
   };
   w.onopen = function(event){
-    Event.$emit("opened", {event.data});
+    Event.$emit("opened", event.data);
   };
   w.onclose = function(event){
-    Event.$emit("closed", {event.data});
+    Event.$emit("closed", event.data);
 
   };
   w.onerror = function(event){
-    Event.$emit("error", {event.data});
+    Event.$emit("error", event.data);
 
   };
 
