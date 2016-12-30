@@ -133,6 +133,8 @@ main = do
   [file] <- getArgs
   handle <- openFile file AppendMode
   hSetBuffering handle LineBuffering
+  hSetBuffering stderr LineBuffering
+  hSetBuffering stdout LineBuffering
   let port = 8081
   putStrLn $ "App running on port " ++ show port
   chan0 <- newChan 
