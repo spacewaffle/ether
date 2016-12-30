@@ -14,6 +14,28 @@ import Network.Wai.EventSource
 import Network.Wai.EventSource.EventStream
 import Web.Scotty
 import Control.Applicative
+import Data.Aeson
+
+data ChatMessage = 
+      ChatMessage {
+        chatName :: Text
+      , chatBody :: Text
+      } deriving Show
+
+data Join = Join { joinName :: Text }
+
+data Leave = Leave { leaveName :: Text }
+
+instance FromJSON ChatMessage where
+  parseJSON (Object v) = ChatMessage <$> v .: "name"
+                                     <*> v .: "body"
+
+instance ToJSON ChatMessage where
+  toJSON ChatMessage{..} = object [
+      "name" .= chatName
+    , "body" .= chatBody
+    ]
+
 
 myapp :: Chan ServerEvent -> IO Application
 myapp chan0 = do
@@ -21,14 +43,18 @@ myapp chan0 = do
   web <- scottyApp $ do 
       get "/" $ 
         file "index.html"
+      post "/message" $ do
+        undefined
+        -- append to STDOUT or unix style file handle
+        
       get "/style.css" $
         file "style.css"
       get "/reset.css" $
         file "reset.css"
+
   return $
     mapUrls $
-          mount "channel" (sse)
-      <|> mount "ws" (sse)
+          mount "sse" sse
       <|> mountRoot web
 
 mkServerEvent :: String -> ServerEvent
