@@ -120,16 +120,14 @@ sseChan chan0 req sendResponse = do
 myEventSourceApp :: IO Message -> Application
 myEventSourceApp src req sendResponse = do
     let q = queryToQueryText $ queryString req
-        chan = fromMaybe "all" $ join $ lookup "chan" q
-    -- capture channel number
-    liftIO $ hPutStrLn stderr $ "chan: " ++ show chan
+        chanName = fromMaybe "all" $ join $ lookup "chan" q
 
     sendResponse $ responseStream
         status200
         [(hContentType, "text/event-stream")]
         $ \sendChunk flush -> fix $ \loop -> do
             m :: Message <- src
-            let se = filterChan chan m
+            let se = filterChan chanName m
                      >>= Just . mkServerEvent
                      >>= eventToBuilder
             case se of
