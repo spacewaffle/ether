@@ -64,5 +64,6 @@ executable testio
                      , warp
                      , wai
                      , http-types
+                     , blaze-builder
 
 
