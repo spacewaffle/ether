@@ -13,24 +13,6 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
-executable ether-ws
-  hs-source-dirs:      .
-  main-is:             MainWS.hs
-  default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5
-                     , text
-                     , bytestring
-                     , scotty
-                     , containers
-                     , websockets
-                     , aeson
-                     , wai-extra
-                     , scotty
-                     , warp
-                     , wai
-                     , wai-websockets 
-                     , http-types
-
 executable ether
   hs-source-dirs:      .
   main-is:             Main.hs
@@ -49,5 +31,6 @@ executable ether
                      , http-types
                      , blaze-builder
                      , transformers
+                     , time
 
 

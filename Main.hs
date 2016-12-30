@@ -18,6 +18,7 @@ import Control.Applicative
 import Data.Aeson
 import System.IO
 import System.Environment
+import Data.Time.Clock
 
 data Message = 
       ChatMessage {
