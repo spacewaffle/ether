@@ -4,6 +4,7 @@ import Blaze.ByteString.Builder.Char.Utf8  (fromText)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import Data.Function (fix)
 import Data.Text (Text, pack)
+import qualified Data.Text.Encoding as T
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.UrlMap
@@ -76,7 +77,8 @@ instance ToJSON Message where
     , "time" .= t
     ]
 
-myapp :: Handle -> Chan ServerEvent -> IO Application
+
+myapp :: Handle -> Chan Message -> IO Application
 myapp handle chan0 = do
   let sse = sseChan chan0
   web <- scottyApp $ do 
@@ -102,33 +104,38 @@ myapp handle chan0 = do
           mount "sse" sse
       <|> mountRoot web
 
-mkServerEvent :: String -> ServerEvent
-mkServerEvent s = ServerEvent Nothing Nothing [fromText . pack $ s]
+mkServerEvent :: Message -> ServerEvent
+mkServerEvent m = 
+    let json = T.decodeUtf8 . BL8.toStrict $ encode m
+    in ServerEvent Nothing Nothing [fromText json]
 
-sseChan :: Chan ServerEvent -> Application
+sseChan :: Chan Message -> Application
 sseChan chan0 req sendResponse = do
     chan' <- liftIO $ dupChan chan0
     myEventSourceApp (readChan chan') req sendResponse
 
 
-myEventSourceApp :: IO ServerEvent -> Application
+myEventSourceApp :: IO Message -> Application
 myEventSourceApp src req sendResponse = do
     let q = queryString req
         chan = join $ lookup "chan" q
-    -- TODO capture channel number
+    -- capture channel number
     liftIO $ hPutStrLn stderr $ "chan: " ++ show chan
 
     sendResponse $ responseStream
         status200
         [(hContentType, "text/event-stream")]
         $ \sendChunk flush -> fix $ \loop -> do
-            se <- src
-
-
-            case eventToBuilder se of
+            se :: Message <- src
+            -- filter to chan
+            case eventToBuilder (mkServerEvent se) of
                 Nothing -> return ()
                 Just b  -> sendChunk b >> flush >> loop
 
+-- filterChan :: String -> Maybe Value
+-- filterChan x = 
+    
+  
 
 
 main = do
@@ -139,12 +146,15 @@ main = do
   hSetBuffering stdout LineBuffering
   let port = 8081
   putStrLn $ "App running on port " ++ show port
-  chan0 <- newChan 
+  chan0 :: Chan Message <- newChan 
   forkIO $ do 
       fix $ \loop -> do
-        line <- getLine 
-        putStrLn line
-        writeChan chan0 $ mkServerEvent line 
+        line <- BL8.pack <$> getLine 
+        BL8.putStrLn line
+        let v = decode line
+        case v of
+          Just v' -> writeChan chan0 v' 
+          _ -> return ()
         loop
   putStrLn "Running server"
   app <- myapp handle chan0
