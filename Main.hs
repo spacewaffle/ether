@@ -19,21 +19,25 @@ import Data.Aeson
 import System.IO
 import System.Environment
 import Data.Time.Clock
+import Data.Monoid
 
 data Message = 
       ChatMessage {
         chatName :: Text
       , chatBody :: Text
       , chatChan :: Int
+      , time :: Maybe UTCTime
       } 
     | Join { 
         joinName :: Text 
       , joinChan :: Int
+      , time :: Maybe UTCTime
       }
     | Leave { 
-      leaveName :: Text 
-    , leaveChan :: Int
-    } deriving Show
+        leaveName :: Text 
+      , leaveChan :: Int
+      , time :: Maybe UTCTime
+      } deriving Show
 
 instance FromJSON Message where
   parseJSON (Object v) = 
@@ -43,26 +47,31 @@ instance FromJSON Message where
           ChatMessage <$> v .: "name"
                       <*> v .: "body"
                       <*> v .: "chan"
-        "join" -> Join <$> v .: "name" <*> v .: "chan"
-        "leave" -> Leave <$> v .: "name" <*> v .: "chan"
+                      <*> v .:? "time"
+        "join" -> Join <$> v .: "name" <*> v .: "chan" <*> v .:? "time"
+        "leave" -> Leave <$> v .: "name" <*> v .: "chan" <*> v .:? "time"
         y -> error $ "Unrecognized Message type: " ++ show y
 
 instance ToJSON Message where
-  toJSON ChatMessage{..} = object [
+  toJSON ChatMessage{..} = object 
+    [
       "type" .= ("chat_message" :: Text)
     , "name" .= chatName
     , "body" .= chatBody
     , "chan" .= chatChan
+    , "time" .= time
     ]
-  toJSON (Join n ch) = object [
+  toJSON (Join n ch t) = object [
       "type" .= ("join" :: Text)
     , "name" .= n
     , "chan" .= ch
+    , "time" .= t
     ]
-  toJSON (Leave n ch) = object [
+  toJSON (Leave n ch t) = object [
       "type" .= ("leave" :: Text)
     , "name" .= n
     , "chan" .= ch
+    , "time" .= t
     ]
 
 myapp :: Handle -> Chan ServerEvent -> IO Application
@@ -73,7 +82,9 @@ myapp handle chan0 = do
         file "index.html"
       post "/message" $ do
         message :: Message <- jsonData
-        liftIO . BL8.hPutStrLn handle . encode $ message
+        now <- liftIO getCurrentTime
+        let message' = message { time = Just now }
+        liftIO . BL8.hPutStrLn handle . encode $ message'
       get "/style.css" $
         file "style.css"
       get "/reset.css" $
