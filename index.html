@@ -16,7 +16,7 @@
         <ul>
           <li v-for="message in messages">
             <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
-            {{message.name}}: {{message.body}}
+            {{message.name}}: <span v-html="message.body"></span>
           </li>
         </ul>
         <br/>
@@ -65,6 +65,9 @@ $(document).ready(function() {
         this.post = "";
       },
       receivedMessage: function(data){
+        if(data.type == "chat_message"){
+          data.body = emojione.toImage(data.body)
+        }
         this.messages.push(data);
       }
     },
