@@ -31,3 +31,21 @@ executable ether
                      , wai-websockets 
                      , http-types
 
+executable ether-sse
+  hs-source-dirs:      .
+  main-is:             MainSSE.hs
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5
+                     , text
+                     , bytestring
+                     , scotty
+                     , containers
+                     , websockets
+                     , aeson
+                     , wai-extra
+                     , scotty
+                     , warp
+                     , wai
+                     , http-types
+
+
