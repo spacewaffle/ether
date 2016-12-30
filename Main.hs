@@ -81,8 +81,8 @@ instance ToJSON Message where
     ]
 
 
-myapp :: Handle -> Chan Message -> IO Application
-myapp handle chan0 = do
+myapp :: Handle -> Chan Message -> Chan Message -> IO Application
+myapp handle chan0 outChan = do
   let sse = sseChan chan0
   web <- scottyApp $ do 
       get "/" $ 
@@ -91,7 +91,7 @@ myapp handle chan0 = do
         message :: Message <- jsonData
         now <- liftIO getCurrentTime
         let message' = message { time = Just now }
-        liftIO . BL8.hPutStrLn handle . encode $ message'
+        liftIO $ writeChan outChan message'
       get "/chan/:id" $ do
         -- this should present a backlog of n messages from the file
         undefined
@@ -162,8 +162,17 @@ main = do
             hPutStrLn stderr $ "error reading input " ++ show v
             return ()
         loop
+  -- buffered output
+  -- This throttles output to ensure outgoing JSON messages don't overlap 
+  outChan :: Chan Message <- newChan
+  forkIO $ do
+      fix $ \loop -> do
+        m :: Message <- readChan outChan
+        BL8.hPutStrLn handle . encode $ m
+        loop
+
   putStrLn "Running server"
-  app <- myapp handle chan0
+  app <- myapp handle chan0 outChan
   putStrLn $ "port " ++ show port
   run port $ app
 
