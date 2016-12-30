@@ -43,7 +43,7 @@ $(document).ready(function() {
 
   var loc = window.location, new_uri;
 
-  var evtSource = new EventSource("/sse");
+  var evtSource = new EventSource("/sse" + window.location.search);
 
 
   window.Event = new Vue();

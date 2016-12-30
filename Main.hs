@@ -108,6 +108,8 @@ sseChan :: Chan ServerEvent -> Application
 sseChan chan0 req sendResponse = do
     chan' <- liftIO $ dupChan chan0
     let q = queryString req
+    -- [("chan",Just "1")]
+    -- TODO capture channel number
     liftIO $ hPutStrLn stderr $ show q
     myEventSourceApp (readChan chan') req sendResponse
 
