@@ -14,12 +14,35 @@
   <div id="root">
     <div id="chatbox" class="messages" v-cloak>
         <ul>
+<!--                     <li><span>[join]</span>
+            spacewaffle: <span></span></li><li>
+            spacewaffle: <span>whatever</span></li><li>
+            spacewaffle: <span>awf</span></li><li>
+            spacewaffle: <span>awf</span></li><li>
+            spacewaffle: <span>awef</span></li><li>
+            spacewaffle: <span>awef</span></li><li>
+            spacewaffle: <span>esr</span></li><li>
+            spacewaffle: <span>gg</span></li><li>
+            spacewaffle: <span>sreg</span></li><li>
+            spacewaffle: <span>r</span></li><li>
+            spacewaffle: <span>ser</span></li><li>
+            spacewaffle: <span>g</span></li><li>
+            spacewaffle: <span>awe</span></li><li>
+            spacewaffle: <span>awef</span></li><li>
+            spacewaffle: <span>eg</span></li><li>
+            spacewaffle: <span>se</span></li><li>
+            spacewaffle: <span>ersg</span></li><li>
+            spacewaffle: <span>awe</span></li><li>
+            spacewaffle: <span>awef</span></li><li>
+            spacewaffle: <span>aew</span></li><li>
+            spacewaffle: <span>serg</span></li><li>
+            spacewaffle: <span>awef</span></li> -->
+
           <li v-for="message in messages">
             <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
             {{message.name}}: <span v-html="message.body"></span>
           </li>
         </ul>
-        <br/>
         <input v-model='post' v-bind:value="'post'"
                size="50"
                placeholder="Write your message"
@@ -69,6 +92,7 @@ $(document).ready(function() {
           data.body = emojione.toImage(data.body)
         }
         this.messages.push(data);
+        $(document).scrollTop($(document).height());
       }
     },
     created: function() {
