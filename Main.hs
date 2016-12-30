@@ -45,6 +45,8 @@ myapp state = do
   web <- scottyApp $ do 
       get "/" $ 
         file "index.html"
+      get "/style.css" $
+        file "style.css"
   return $
     mapUrls $
           mount "ws" (wsApp state)
