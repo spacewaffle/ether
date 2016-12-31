@@ -6,5 +6,5 @@ all: build-haskell
 build-haskell:
 	stack install 
 	touch log
-	@echo Type '`tail -f log | ether log`' to start up webapp
+	@echo Type '`ether log`' to start up webapp
 
