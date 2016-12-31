@@ -32,6 +32,7 @@ executable ether
                      , blaze-builder
                      , transformers
                      , time
-                     , process-conduit
-
-
+                     , conduit
+                     , conduit-extra
+                     , async
+  ghc-options: -threaded

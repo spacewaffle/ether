@@ -26,6 +26,13 @@ import System.Environment
 import Data.Time.Clock
 import Data.Monoid
 import Data.Maybe
+import           Control.Applicative      ((*>))
+import           Control.Concurrent.Async (Concurrently (..))
+import           Data.Conduit             (await, yield, (.|), runConduit)
+import qualified Data.Conduit.Binary      as CB
+import qualified Data.Conduit.List        as CL
+import           Data.Conduit.Process     
+
 
 data Message = 
       ChatMessage {
@@ -81,11 +88,12 @@ instance ToJSON Message where
     ]
 
 
-myapp :: Handle -> Chan Message -> Chan Message -> IO Application
-myapp handle chan0 outChan = do
+myapp :: Chan Message -> Chan Message -> IO Application
+myapp chan0 outChan = do
   let sse = sseChan chan0
   web <- scottyApp $ do 
-      get "/" $ 
+      get "/" $ do
+        liftIO $ putStrLn "get /"
         file "index.html"
       post "/message" $ do
         message :: Message <- jsonData
@@ -148,30 +156,40 @@ main = do
   let port = 8081
   putStrLn $ "App running on port " ++ show port
   chan0 :: Chan Message <- newChan 
-  forkIO $ do 
-      fix $ \loop -> do
-        !line <- BL8.pack <$> getLine 
-        BL8.putStrLn line
-        let v = decode line
-        case v of
-          Just v' -> writeChan chan0 v' 
-          _ -> do
-            hPutStrLn stderr $ "error reading input " ++ show v
-            return ()
-        loop
-  -- buffered output
-  -- This throttles output to ensure outgoing JSON messages don't overlap 
+
   outChan :: Chan Message <- newChan
-  forkIO $ do
-      fix $ \loop -> do
-        m :: Message <- readChan outChan
-        BL8.hPutStrLn handle . encode $ m
-        loop
+  putStrLn "hello1"
+  (ClosedStream, fromTail, ClosedStream, cph) <- streamingProcess (proc "tail" ["-f", "log"])
+  putStrLn "hello"
+  let input = runConduit $ fromTail 
+                        .| CB.lines
+                        .| CL.mapM_
+        (\bs -> 
+          let v = decode $ BL8.fromStrict bs
+          in case v of
+              Just v' -> do
+                writeChan chan0 v' 
+              _ -> do
+                hPutStrLn stderr $ "error reading input " ++ show v
+                return ()
+        )
 
-  putStrLn "Running server"
-  app <- myapp handle chan0 outChan
-  putStrLn $ "port " ++ show port
-  run port $ app
+  ec <- runConcurrently 
+        $ Concurrently input
+        -- *> Concurrently (waitForStreamingProcess cph)
+        *> Concurrently (
+              -- buffered output
+              -- This throttles output to ensure outgoing JSON messages don't overlap 
+              fix $ \loop -> do
+                m :: Message <- readChan outChan
+                BL8.hPutStrLn handle . encode $ m
+                loop)
+        *> Concurrently (do
+            putStrLn "Running server"
+            app <- myapp chan0 outChan
+            putStrLn $ "port " ++ show port
+            run port $ app
+        )
 
-          
-         
+  putStrLn $ "Process exit code: " ++ show ec
+

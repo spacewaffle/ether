@@ -1,7 +1,5 @@
 #!/bin/bash
-tail -f log | ether >(tee -a log | ./split.sh) &
 
-sleep 3
 
 for x in $(seq 1 70) ; do
   echo $x

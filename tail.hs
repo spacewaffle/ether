@@ -16,8 +16,9 @@ main = do
     (ClosedStream, fromProcess, ClosedStream, cph) <-
         streamingProcess (proc "tail" ["-f", "log2"])
 
+    putStrLn "Doing again tail -f log2"
 
-    let output = runConduit $ fromProcess .| CL.mapM_
+    let output = runConduit $ fromProcess .| CB.lines .| CL.mapM_
             (\bs -> putStrLn $ "from process: " ++ show bs)
 
     ec <- runConcurrently $
