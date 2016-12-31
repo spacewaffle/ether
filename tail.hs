@@ -13,7 +13,7 @@ main :: IO ()
 main = do
     putStrLn "Doing tail -f log2"
 
-    (Inherited, fromProcess, ClosedStream, cph) <-
+    (ClosedStream, fromProcess, ClosedStream, cph) <-
         streamingProcess (proc "tail" ["-f", "log2"])
 
 
