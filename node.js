@@ -1,8 +1,15 @@
 
 var http = require('http');
+var fs = require('fs');
 var Rx = require('rx');
+var readline = require('readline');
+
 var RxNode = require('rx-node');
-var input = RxNode.fromStream(process.stdin)
+
+var rl = readline.createInterface({
+  input: process.stdin
+});
+var input = RxNode.fromReadLineStream(rl)
 
 var server = http.createServer(function(req, res){
   if (req.url != '/events') return res.end();
