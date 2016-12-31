@@ -3,11 +3,16 @@ var http = require('http');
 var fs = require('fs');
 var Rx = require('rx');
 var readline = require('readline');
-
+var Tail = require('tail').Tail;
 var RxNode = require('rx-node');
 
+var cp = require('child_process');
+var file = 'log';
+var n = cp.spawn('tail',['-f',file]);
+
 var rl = readline.createInterface({
-  input: process.stdin
+  //input: process.stdin
+  input: n.stdout
 });
 var input = RxNode.fromReadLineStream(rl)
 
