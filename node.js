@@ -3,7 +3,6 @@ var http = require('http');
 var fs = require('fs');
 var Rx = require('rx');
 var readline = require('readline');
-var Tail = require('tail').Tail;
 var RxNode = require('rx-node');
 
 var cp = require('child_process');
