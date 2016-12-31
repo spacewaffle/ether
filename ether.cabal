@@ -32,5 +32,6 @@ executable ether
                      , blaze-builder
                      , transformers
                      , time
+                     , process-conduit
 
 
