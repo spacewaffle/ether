@@ -1,4 +1,3 @@
 .stack-work
 log
-ether_app/tmp
-/tmp
+ether_app/tmp/
