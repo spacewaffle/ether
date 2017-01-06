@@ -1,0 +1,2 @@
+module ChatsControllerHelper
+end
