@@ -9,5 +9,5 @@ build-haskell:
 	@echo Type '`ether log`' to start up webapp
 
 run-nginx: 
-	nginx -c $(PWD)/nginx.conf -s reload
+	sudo nginx -c $(PWD)/nginx.conf -s reload
 	ether log
