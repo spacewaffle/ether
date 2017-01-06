@@ -1,2 +1,2 @@
-module ChatsControllerHelper
+module ChatsHelper
 end
