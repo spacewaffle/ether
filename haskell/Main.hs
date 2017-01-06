@@ -153,7 +153,7 @@ main = do
   hSetBuffering handle LineBuffering
   hSetBuffering stderr LineBuffering
   hSetBuffering stdout LineBuffering
-  let port = 8081
+  let port = 3001
   putStrLn $ "App running on port " ++ show port
   chan0 :: Chan Message <- newChan 
 
