@@ -6,12 +6,13 @@
   <%= csrf_meta_tags %>
 </head>
 <body>
+  <%= render "devise/menu/nav_items" %>
   <p class="notice"><%= notice %></p>
   <p class="alert"><%= alert %></p>
 
   <%= yield %>
 
-  <%= javascript_include_tag 'application' %>
+  <%= javascript_include_tag 'application', params[:controller] %>
 
 </body>
 </html>
