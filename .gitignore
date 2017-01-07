@@ -1,3 +1,4 @@
 .stack-work
 log
 ether_app/tmp/
+*.sqlite3
