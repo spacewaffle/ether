@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>EtherApp</title>
-  <%= stylesheet_link_tag    'application', media: 'all' %>
+  <%= stylesheet_link_tag 'application', params[:controller], media: 'all' %>
   <%= csrf_meta_tags %>
 </head>
 <body>
