@@ -2,3 +2,7 @@
 log
 ether_app/tmp/
 *.sqlite3
+
+ether_app/db/development.sqlite3
+
+ether_app/db/*.sqlite3
