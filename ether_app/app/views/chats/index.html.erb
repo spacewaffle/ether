@@ -1,5 +1,5 @@
 <div id="root">
-  <div id="chatbox" class="messages" v-cloak>
+  <div id="chatbox" class="messages">
     <a href="http://localhost:8081/?chan=a">chan a</a>
     <a href="http://localhost:8081/?chan=b">chan b</a>
       <ul>
@@ -14,13 +14,7 @@
              v-on:keyup.13="submit()"
              type="text"/>
   </div>
-  <div id="username" v-if="visible">
-    <input v-model='username' v-bind:value="'username'"
-           size="50"
-           placeholder="Enter your username here"
-           v-on:keyup.13="setUsername()"
-           v-bind:autofocus="focused"
-           type="text"/>
-    
-  </div>
 </div>
+<script>
+  window.username = "<%= @username %>"
+</script>

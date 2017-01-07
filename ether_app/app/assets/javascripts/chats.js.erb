@@ -10,14 +10,14 @@ $(document).ready(function() {
       chan = match && match[1];
 
   window.Event = new Vue();
-  var username  = ''
   var chan  = chan || "all" // change later to real channel number
 
   var postComponent = new Vue({
     el: "#chatbox",
     data: { 
       post: "",
-      messages: []
+      messages: [],
+      username: ""
     },
     methods: {
       submit: function() {
@@ -33,30 +33,19 @@ $(document).ready(function() {
         }
         this.messages.push(data);
         $(document).scrollTop($(document).height());
+      },
+      setUsername: function() {
+        this.username = window.username
+        $('#chatbox input').focus();
+        var payload = {type: "join", name: this.username, chan: chan};
+        $.post("/message", JSON.stringify(payload));
       }
     },
     created: function() {
       Event.$on("message", this.receivedMessage);
+      this.setUsername();
     }
 
-  });
-
-  var usernameComponent = new Vue({
-    el: "#username",
-    data: { 
-      username: "",
-      visible: true,
-      focused: true
-    },
-    methods: {
-      setUsername: function() {
-        username = this.username;
-        $('#chatbox input').focus();
-        var payload = {type: "join", name: this.username, chan: chan};
-        $.post("/message", JSON.stringify(payload));
-        this.visible = false;
-      }
-    }
   });
 
   evtSource.onmessage = function(event) {
