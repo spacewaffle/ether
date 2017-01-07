@@ -39,9 +39,10 @@ $(document).ready(function() {
         $('#chatbox input').focus();
         var payload = {type: "join", name: this.username, chan: chan};
         $.post("/message", JSON.stringify(payload));
+        console.log("setting username");
       }
     },
-    created: function() {
+    mounted: function() {
       Event.$on("message", this.receivedMessage);
       this.setUsername();
     }
