@@ -1,8 +1,8 @@
-name:                posttest
+name:                htm2
 version:             0.1.0.0
 synopsis:            Simple project template from stack
 description:         Please see README.md
-homepage:            https://github.com/danchoi/posttest
+homepage:            https://github.com/danchoi/htm2
 license:             MIT
 license-file:        LICENSE
 author:              Dan Choi
@@ -13,14 +13,11 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
-executable posttest
+executable htm2
   hs-source-dirs:      .
   main-is:             Main.hs
   default-language:    Haskell2010
   build-depends:       base >= 4.7 && < 5
                      , text
                      , bytestring
-                     , scotty
-                     , warp
-                     , transformers
-                     , aeson
+                     , hxt
