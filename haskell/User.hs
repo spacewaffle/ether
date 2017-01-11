@@ -30,10 +30,7 @@ getUserById :: Connection -> Int64 -> IO (Maybe User)
 getUserById c uid = 
     query c "select id, username, email from users where id = ?" (Only uid)
     >>= \xs -> 
-          case xs of 
-              (i, u, e):_ -> return $ Just $ User i u e
-              _ -> return Nothing
-
+      case xs of { (i, u, e):_ -> return (Just $ User i u e) ; _ -> return Nothing }
 
 ------------------------------------------------------------------------
 data UserCreate = 
@@ -78,9 +75,7 @@ signupAction = do
   r <- runForm "signup" signupForm
   case r of
     (view, Nothing) -> W.html $ renderText (signupHtml view)
-    (view, Just x) -> 
-      W.text $ TL.pack ("Create User: " <> show x)
-
+    (view, Just x) -> W.text $ TL.pack ("Create User: " <> show x)
 
 ------------------------------------------------------------------------
 
