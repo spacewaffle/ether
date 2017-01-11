@@ -29,7 +29,7 @@ data User =
 
 getUserById :: Connection -> Int64 -> IO (Maybe User)
 getUserById c uid = 
-    query c "select id, username, email from users where id = ?" (Only uid)
+    query c "select user_id, username, email from users where user_id = ?" (Only uid)
     >>= \xs -> 
       case xs of { (i, u, e):_ -> return (Just $ User i u e) ; _ -> return Nothing }
 
@@ -47,10 +47,19 @@ data UserCreate =
 createUser :: Connection -> UserCreate -> IO User
 createUser c (UserCreate u e p) = do
     x <- query c "insert into users (username, email, encrypted_password) \
-         \values (?, ?, ?) returning id" (u, e, p)
+         \values (?, ?, ?) returning user_id" (u, e, p)
     case x of
       (Only uid):_ -> fromJust <$> getUserById c uid
       _ -> error ("Failed to create user: " ++ show u)
+
+-- can thread layout in here
+signupAction :: ActionM ()
+signupAction = do
+  r <- runForm "signup" signupForm
+  case r of
+    (view, Nothing) -> W.html $ renderText (signupHtml view)
+    (view, Just x) -> W.text $ TL.pack ("Create User: " <> show x)
+
 
 signupForm :: Monad m => Form (Html ()) m UserCreate
 signupForm = UserCreate 
@@ -91,14 +100,6 @@ error_list ref view = case errors ref view of
     []   -> mempty
     errs -> ul_ [class_ "error-list"] $ forM_ errs $ \e ->
               li_ [class_ "error"] e
-
--- can thread layout in here
-signupAction :: ActionM ()
-signupAction = do
-  r <- runForm "signup" signupForm
-  case r of
-    (view, Nothing) -> W.html $ renderText (signupHtml view)
-    (view, Just x) -> W.text $ TL.pack ("Create User: " <> show x)
 
 ------------------------------------------------------------------------
 
