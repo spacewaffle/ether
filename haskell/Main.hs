@@ -1,5 +1,6 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables, BangPatterns #-} 
 module Main where
+import User
 import Blaze.ByteString.Builder.Char.Utf8  (fromText)
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.ByteString.Char8 as B8

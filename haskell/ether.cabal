@@ -35,32 +35,34 @@ executable ether
                      , conduit
                      , conduit-extra
                      , async
+                     , postgresql-simple
+                     , lucid
   ghc-options: -threaded
 
-executable ethertest
-  hs-source-dirs:      .
-  main-is:             exp.hs
-  default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5
-                     , text
-                     , bytestring
-                     , containers
-                     , conduit
-                     , conduit-extra
-
-executable ethertest2
-  hs-source-dirs:      .
-  main-is:             exp2.hs
-  default-language:    Haskell2010
-  build-depends:       base >= 4.7 && < 5
-                     , text
-                     , bytestring
-                     , containers
-                     , conduit
-                     , conduit-extra
-                     , wai
-                     , transformers
-                     , warp
-                     , async
-                     , scotty
-  ghc-options: -threaded
+--executable ethertest
+--  hs-source-dirs:      .
+--  main-is:             exp.hs
+--  default-language:    Haskell2010
+--  build-depends:       base >= 4.7 && < 5
+--                     , text
+--                     , bytestring
+--                     , containers
+--                     , conduit
+--                     , conduit-extra
+--
+--executable ethertest2
+--  hs-source-dirs:      .
+--  main-is:             exp2.hs
+--  default-language:    Haskell2010
+--  build-depends:       base >= 4.7 && < 5
+--                     , text
+--                     , bytestring
+--                     , containers
+--                     , conduit
+--                     , conduit-extra
+--                     , wai
+--                     , transformers
+--                     , warp
+--                     , async
+--                     , scotty
+--  ghc-options: -threaded
