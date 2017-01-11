@@ -19,6 +19,8 @@ import qualified Web.Scotty as W
 import Web.Scotty (ActionM)
 import Text.Digestive.Scotty (runForm)
 
+import Network.Wai (Application)
+
 -- https://hackage.haskell.org/package/digestive-functors-lucid-0.0.0.4/docs/Text-Digestive-Lucid-Html5.html
 
 data User = 
@@ -55,6 +57,13 @@ createUser c (UserCreate u e p) = do
 
 createUser' :: UserCreate -> IO User
 createUser' x = connectPostgreSQL "dbname=ether" >>= flip createUser x
+
+signupApp :: IO Application
+signupApp = 
+  W.scottyApp $ do
+      W.get "/" $ signupAction
+      W.post "/" $ signupAction
+
 
 -- can thread layout in here
 signupAction :: ActionM ()
