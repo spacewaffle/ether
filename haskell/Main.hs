@@ -12,6 +12,7 @@ import Network.Wai.Handler.Warp
 import Network.Wai.UrlMap
 import Network.Wai.Middleware.Autohead
 import Network.Wai.Middleware.RequestLogger
+import Network.Wai.Middleware.AddHeaders
 
 import Network.Wai
 import Network.HTTP.Types
@@ -121,6 +122,7 @@ myapp chan0 outChan = do
   return $
     autohead $ 
     logStdout $
+    addHeaders [("test", "header")] $
     mapUrls $
           mount "sse" sse
       <|> mountRoot signup
