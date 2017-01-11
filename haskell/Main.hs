@@ -10,6 +10,7 @@ import qualified Data.Text.Encoding as T
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.UrlMap
+import Network.Wai.Middleware.Autohead
 import Network.Wai
 import Network.HTTP.Types
 import Control.Monad (join)
@@ -116,6 +117,7 @@ myapp chan0 outChan = do
         setHeader "Content-Type" "text/css"
         file "reset.css"
   return $
+    autohead $ 
     mapUrls $
           mount "sse" sse
       <|> mountRoot signup
