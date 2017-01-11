@@ -22,6 +22,7 @@ executable ether
                      , bytestring
                      , digestive-functors
                      , digestive-functors-lucid
+                     , digestive-functors-scotty
                      , scotty
                      , containers
                      , websockets

@@ -1,7 +1,9 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables #-} 
 module User where
 import Database.PostgreSQL.Simple
+import Data.Monoid
 import Data.Text (Text)
+import qualified Data.Text.Lazy as TL
 import Data.Int (Int64)
 import Data.Maybe 
 import Control.Applicative
@@ -10,9 +12,11 @@ import Lucid
 import Text.Digestive.Lucid.Html5
 import Text.Digestive
 
+import qualified Web.Scotty as W
+import Web.Scotty (ActionM)
+import Text.Digestive.Scotty (runForm)
+
 -- https://hackage.haskell.org/package/digestive-functors-lucid-0.0.0.4/docs/Text-Digestive-Lucid-Html5.html
-
-
 
 
 data User = 
@@ -20,7 +24,7 @@ data User =
       Int64 -- id
       Text -- username
       Text -- email 
-
+  deriving Show
 
 getUserById :: Connection -> Int64 -> IO (Maybe User)
 getUserById c uid = 
@@ -37,6 +41,7 @@ data UserCreate =
         Text  -- username 
         Text  -- email
         Text  -- validated password
+    deriving Show
 
 -- TODO encrypt password
 
@@ -58,14 +63,23 @@ signupForm = UserCreate
 signupHtml :: View Text -> Html ()
 signupHtml view = do
   form_ [acceptCharset_ "UTF-8", action_ "/signup", method_ "POST"] $ do
-    input_ [ name_ "username"
-           , value_ ""
+    input_ [ name_ $ absoluteRef "username" view
            , placeholder_ "Username"
            , size_ "20"
            , type_ "text"
+           , value_ $ fieldInputText "username" view
            ]
-        
-  "test"
+    inputText "email" view
+    inputPassword "password" view
+    inputSubmit "Save"
+
+signupAction :: ActionM ()
+signupAction = do
+  r <- runForm "signup" signupForm
+  case r of
+    (view, Nothing) -> W.html $ renderText (signupHtml view)
+    (view, Just x) -> 
+      W.text $ TL.pack ("Create User: " <> show x)
 
 
 ------------------------------------------------------------------------

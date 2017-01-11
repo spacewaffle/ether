@@ -96,6 +96,10 @@ myapp chan0 outChan = do
       get "/" $ do
         liftIO $ putStrLn "get /"
         file "index.html"
+
+      get "/signup" $ signupAction
+      post "/signup" $ signupAction
+
       post "/message" $ do
         message :: Message <- jsonData
         now <- liftIO getCurrentTime
