@@ -3,6 +3,7 @@ module User where
 import Database.PostgreSQL.Simple
 import Data.Monoid
 import Control.Monad (forM_)
+import Control.Monad.IO.Class (liftIO)
 import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
@@ -52,13 +53,18 @@ createUser c (UserCreate u e p) = do
       (Only uid):_ -> fromJust <$> getUserById c uid
       _ -> error ("Failed to create user: " ++ show u)
 
+createUser' :: UserCreate -> IO User
+createUser' x = connectPostgreSQL "dbname=ether" >>= flip createUser x
+
 -- can thread layout in here
 signupAction :: ActionM ()
 signupAction = do
   r <- runForm "signup" signupForm
   case r of
     (view, Nothing) -> W.html $ renderText (signupHtml view)
-    (view, Just x) -> W.text $ TL.pack ("Create User: " <> show x)
+    (_, Just x) -> do
+        u <- liftIO (createUser' x)
+        W.text $ TL.pack . show $ u
 
 
 signupForm :: Monad m => Form (Html ()) m UserCreate

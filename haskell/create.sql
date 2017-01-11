@@ -1,6 +1,6 @@
 create table users (
   user_id serial primary key,
-  username varchar,
-  email varchar,
-  encrypted_password varchar
+  username varchar not null unique,
+  email varchar not null,
+  encrypted_password varchar not null
 )
