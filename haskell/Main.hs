@@ -125,22 +125,22 @@ sseChan :: Chan Message -> Application
 sseChan chan0 req sendResponse = do
     chan' <- liftIO $ dupChan chan0
     myEventSourceApp (readChan chan') req sendResponse
-
-myEventSourceApp :: IO Message -> Application
-myEventSourceApp src req sendResponse = do
-    let q = queryToQueryText $ queryString req
-        chanName = fromMaybe "all" $ join $ lookup "chan" q
-    sendResponse $ responseStream
-        status200
-        [(hContentType, "text/event-stream")]
-        $ \sendChunk flush -> fix $ \loop -> do
-            m :: Message <- src
-            let se = filterChan chanName m
-                     >>= Just . mkServerEvent
-                     >>= eventToBuilder
-            case se of
-                Nothing -> loop
-                Just b  -> sendChunk b >> flush >> loop
+  where
+    myEventSourceApp :: IO Message -> Application
+    myEventSourceApp src req sendResponse = do
+        let q = queryToQueryText $ queryString req
+            chanName = fromMaybe "all" $ join $ lookup "chan" q
+        sendResponse $ responseStream
+            status200
+            [(hContentType, "text/event-stream")]
+            $ \sendChunk flush -> fix $ \loop -> do
+                m :: Message <- src
+                let se = filterChan chanName m
+                         >>= Just . mkServerEvent
+                         >>= eventToBuilder
+                case se of
+                    Nothing -> loop
+                    Just b  -> sendChunk b >> flush >> loop
 
 mkServerEvent :: Message -> ServerEvent
 mkServerEvent m = 
