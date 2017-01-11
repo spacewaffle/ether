@@ -2,7 +2,9 @@
 module User where
 import Database.PostgreSQL.Simple
 import Data.Monoid
+import Control.Monad (forM_)
 import Data.Text (Text)
+import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Int (Int64)
 import Data.Maybe 
@@ -17,7 +19,6 @@ import Web.Scotty (ActionM)
 import Text.Digestive.Scotty (runForm)
 
 -- https://hackage.haskell.org/package/digestive-functors-lucid-0.0.0.4/docs/Text-Digestive-Lucid-Html5.html
-
 
 data User = 
     User 
@@ -41,23 +42,26 @@ data UserCreate =
     deriving Show
 
 -- TODO encrypt password
+-- may get username uniqueness exception
 
 createUser :: Connection -> UserCreate -> IO User
 createUser c (UserCreate u e p) = do
     x <- query c "insert into users (username, email, encrypted_password) \
          \values (?, ?, ?) returning id" (u, e, p)
-    -- may get username uniqueness exception
     case x of
       (Only uid):_ -> fromJust <$> getUserById c uid
       _ -> error ("Failed to create user: " ++ show u)
 
-signupForm :: Monad m => Form Text m UserCreate
+signupForm :: Monad m => Form (Html ()) m UserCreate
 signupForm = UserCreate 
-    <$> "username" .: text Nothing
-    <*> "email" .: text Nothing
-    <*> "password" .: text Nothing
+    <$> "username" .: check "can't be blank" checkNotBlank (text Nothing)
+    <*> "email" .: check "can't be blank" checkNotBlank (text Nothing)
+    <*> "password" .: check "can't be blank" checkNotBlank (text Nothing)
 
-signupHtml :: View Text -> Html ()
+checkNotBlank :: Text -> Bool
+checkNotBlank = not . T.null . T.strip
+
+signupHtml :: View (Html ()) -> Html ()
 signupHtml view = do
   form_ [acceptCharset_ "UTF-8", action_ "/signup", method_ "POST"] $ do
     input_ [ name_ $ absoluteRef "username" view
@@ -66,9 +70,21 @@ signupHtml view = do
            , type_ "text"
            , value_ $ fieldInputText "username" view
            ]
+    error_list "username" view
+    br_ []
     inputText "email" view
+    error_list "email" view
+    br_ []
     inputPassword "password" view
+    error_list "password" view
+    br_ []
     inputSubmit "Save"
+
+error_list :: Monad m => Text -> View (HtmlT m ()) -> HtmlT m ()
+error_list ref view = case errors ref view of
+    []   -> mempty
+    errs -> ul_ [class_ "error-list"] $ forM_ errs $ \e ->
+              li_ [class_ "error"] e
 
 signupAction :: ActionM ()
 signupAction = do
