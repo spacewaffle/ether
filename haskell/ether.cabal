@@ -20,6 +20,8 @@ executable ether
   build-depends:       base >= 4.7 && < 5
                      , text
                      , bytestring
+                     , digestive-functors
+                     , digestive-functors-lucid
                      , scotty
                      , containers
                      , websockets
