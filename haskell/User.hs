@@ -54,9 +54,15 @@ createUser c (UserCreate u e p) = do
 
 signupForm :: Monad m => Form (Html ()) m UserCreate
 signupForm = UserCreate 
-    <$> "username" .: check "can't be blank" checkNotBlank (text Nothing)
-    <*> "email" .: check "can't be blank" checkNotBlank (text Nothing)
-    <*> "password" .: check "can't be blank" checkNotBlank (text Nothing)
+    <$> "username" .: usernameValid
+    <*> "email" .: emailValid
+    <*> "password" .: passwordValid
+
+usernameValid, emailValid, passwordValid :: Monad m => Form (Html ()) m Text 
+
+usernameValid = check "can't be blank" checkNotBlank (text Nothing)
+emailValid = check "can't be blank" checkNotBlank (text Nothing)
+passwordValid = check "can't be blank" checkNotBlank (text Nothing)
 
 checkNotBlank :: Text -> Bool
 checkNotBlank = not . T.null . T.strip
@@ -86,6 +92,7 @@ error_list ref view = case errors ref view of
     errs -> ul_ [class_ "error-list"] $ forM_ errs $ \e ->
               li_ [class_ "error"] e
 
+-- can thread layout in here
 signupAction :: ActionM ()
 signupAction = do
   r <- runForm "signup" signupForm
