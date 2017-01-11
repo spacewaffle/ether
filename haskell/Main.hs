@@ -118,7 +118,7 @@ myapp chan0 outChan = do
   return $
     mapUrls $
           mount "sse" sse
-      <|> mount "signup" signup
+      <|> mountRoot signup
       <|> mountRoot web
 
 sseChan :: Chan Message -> Application

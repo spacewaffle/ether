@@ -61,8 +61,8 @@ createUser' x = connectPostgreSQL "dbname=ether" >>= flip createUser x
 signupApp :: IO Application
 signupApp = 
   W.scottyApp $ do
-      W.get "/" $ signupAction
-      W.post "/" $ signupAction
+      W.get "/signup" $ signupAction
+      W.post "/signup" $ signupAction
 
 
 -- can thread layout in here
