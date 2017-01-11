@@ -11,6 +11,8 @@ import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.UrlMap
 import Network.Wai.Middleware.Autohead
+import Network.Wai.Middleware.RequestLogger
+
 import Network.Wai
 import Network.HTTP.Types
 import Control.Monad (join)
@@ -118,6 +120,7 @@ myapp chan0 outChan = do
         file "reset.css"
   return $
     autohead $ 
+    logStdout $
     mapUrls $
           mount "sse" sse
       <|> mountRoot signup
