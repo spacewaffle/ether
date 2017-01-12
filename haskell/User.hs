@@ -41,13 +41,12 @@ withConnection :: (Connection -> IO a) -> IO a
 withConnection f = do
   c <- connectPostgreSQL "dbname=ether host=localhost" 
   r <- f c
-  commit c
   close c 
   return r
 
 login :: Connection -> Text -> Text -> IO (Maybe Int64)
 login c u p = 
-    query c "select user_id from users where username = ? " (Only u)
+    query c "select user_id from users where username = ?  and encrypted_password = ?" (u, p)
     >>= \xs -> return $ listToMaybe [ i | (Only i) <- xs ]
 
 login' u p = withConnection (\c -> login c u p)
@@ -87,10 +86,12 @@ loginAction :: ActionM ()
 loginAction = do
   r <- runForm "login" loginForm
   case r of 
-    (view, Nothing) -> W.html . renderText $ loginHtml view
-    (_, Just (Login u p)) -> do
+    (view, Nothing) -> W.html . renderText $ loginHtml view Nothing
+    (view, Just (Login u p)) -> do
       s <- liftIO $ login' u p
-      undefined
+      case s of
+        Just uid -> W.text . TL.pack . show $ uid
+        Nothing -> W.html . renderText $ loginHtml view (Just "Login failed")
 
 -- can thread layout in here
 signupAction :: ActionM ()
@@ -100,7 +101,7 @@ signupAction = do
     (view, Nothing) -> W.html $ renderText (signupHtml view)
     (_, Just x) -> do
         u <- liftIO (createUser' x)
-        W.text $ TL.pack . show $ u
+        W.redirect "/login"
 
 data Login = Login Text Text
 
@@ -108,8 +109,9 @@ loginForm = Login
     <$> "username" .: usernameValid
     <*> "password" .: passwordValid
 
-loginHtml :: View (Html ()) -> Html ()
-loginHtml view = do
+loginHtml :: View (Html ()) -> Maybe Text -> Html ()
+loginHtml view err = do
+  maybe mempty (p_ [class_ "error"] . toHtml) err 
   form_ [acceptCharset_ "UTF-8", action_ "/login", method_ "POST"] $ do
     input_ [ name_ $ absoluteRef "username" view
            , placeholder_ "Username"
@@ -133,9 +135,9 @@ signupForm = UserCreate
 
 usernameValid, emailValid, passwordValid :: Monad m => Form (Html ()) m Text 
 
-usernameValid = check "can't be blank" checkNotBlank (text Nothing)
-emailValid = check "can't be blank" checkNotBlank (text Nothing)
-passwordValid = check "can't be blank" checkNotBlank (text Nothing)
+usernameValid = check "Username can't be blank" checkNotBlank (text Nothing)
+emailValid = check "Email can't be blank" checkNotBlank (text Nothing)
+passwordValid = check "Password can't be blank" checkNotBlank (text Nothing)
 
 checkNotBlank :: Text -> Bool
 checkNotBlank = not . T.null . T.strip
