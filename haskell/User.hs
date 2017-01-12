@@ -36,6 +36,22 @@ getUserById c uid =
     >>= \xs -> 
       case xs of { (i, u, e):_ -> return (Just $ User i u e) ; _ -> return Nothing }
 
+
+withConnection :: (Connection -> IO a) -> IO a
+withConnection f = do
+  c <- connectPostgreSQL "dbname=ether host=localhost" 
+  r <- f c
+  commit c
+  close c 
+  return r
+
+login :: Connection -> Text -> Text -> IO (Maybe Int64)
+login c u p = 
+    query c "select user_id from users where username = ? " (Only u)
+    >>= \xs -> return $ listToMaybe [ i | (Only i) <- xs ]
+
+login' u p = withConnection (\c -> login c u p)
+
 ------------------------------------------------------------------------
 data UserCreate = 
     UserCreate 
@@ -56,14 +72,25 @@ createUser c (UserCreate u e p) = do
       _ -> error ("Failed to create user: " ++ show u)
 
 createUser' :: UserCreate -> IO User
-createUser' x = connectPostgreSQL "dbname=ether" >>= flip createUser x
+createUser' x = withConnection (flip createUser x)
 
 signupApp :: IO Application
 signupApp = 
   W.scottyApp $ do
+      W.get "/login" $ loginAction
+      W.post "/login" $ loginAction
       W.get "/signup" $ signupAction
       W.post "/signup" $ signupAction
 
+
+loginAction :: ActionM ()
+loginAction = do
+  r <- runForm "login" loginForm
+  case r of 
+    (view, Nothing) -> W.html . renderText $ loginHtml view
+    (_, Just (Login u p)) -> do
+      s <- liftIO $ login' u p
+      undefined
 
 -- can thread layout in here
 signupAction :: ActionM ()
@@ -75,6 +102,28 @@ signupAction = do
         u <- liftIO (createUser' x)
         W.text $ TL.pack . show $ u
 
+data Login = Login Text Text
+
+loginForm = Login
+    <$> "username" .: usernameValid
+    <*> "password" .: passwordValid
+
+loginHtml :: View (Html ()) -> Html ()
+loginHtml view = do
+  form_ [acceptCharset_ "UTF-8", action_ "/login", method_ "POST"] $ do
+    input_ [ name_ $ absoluteRef "username" view
+           , placeholder_ "Username"
+           , size_ "20"
+           , type_ "text"
+           , value_ $ fieldInputText "username" view
+           ]
+    error_list "username" view
+    br_ []
+    inputPassword "password" view
+    error_list "password" view
+    br_ []
+    inputSubmit "Log in"
+  p_ $ a_ [href_ "/signup"] "Sign up"
 
 signupForm :: Monad m => Form (Html ()) m UserCreate
 signupForm = UserCreate 
