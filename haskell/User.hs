@@ -11,6 +11,7 @@ import Data.Int (Int64)
 import Data.Maybe 
 import Control.Applicative
 import Lucid
+import Web.Cookie
 
 import Text.Digestive.Lucid.Html5
 import Text.Digestive
@@ -20,6 +21,7 @@ import Web.Scotty (ActionM)
 import Text.Digestive.Scotty (runForm)
 
 import Network.Wai (Application)
+import Cookie
 
 -- https://hackage.haskell.org/package/digestive-functors-lucid-0.0.0.4/docs/Text-Digestive-Lucid-Html5.html
 
