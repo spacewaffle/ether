@@ -75,14 +75,6 @@ createUser c (UserCreate u e p) = do
 createUser' :: UserCreate -> IO User
 createUser' x = withConnection (flip createUser x)
 
-signupApp :: IO Application
-signupApp = 
-  W.scottyApp $ do
-      W.get "/login" $ loginAction
-      W.post "/login" $ loginAction
-      W.get "/signup" $ signupAction
-      W.post "/signup" $ signupAction
-
 
 loginAction :: ActionM ()
 loginAction = do
@@ -92,7 +84,9 @@ loginAction = do
     (view, Just (Login u p)) -> do
       s <- liftIO $ login' u p
       case s of
-        Just uid -> W.text . TL.pack . show $ uid
+        Just uid -> do
+            setSessionId uid
+            W.redirect "/"
         Nothing -> W.html . renderText $ loginHtml view (Just "Login failed")
 
 -- can thread layout in here

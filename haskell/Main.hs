@@ -96,14 +96,13 @@ instance ToJSON Message where
 myapp :: Chan Message -> Chan Message -> IO Application
 myapp chan0 outChan = do
   let sse = sseChan chan0
-  signup <- signupApp
   web <- scottyApp $ do 
       get "/" $ do
-        liftIO $ putStrLn "get /"
         file "index.html"
-
-      -- get "/signup" $ signupAction
-      -- post "/signup" $ signupAction
+      get "/login" $ loginAction
+      post "/login" $ loginAction
+      get "/signup" $ signupAction
+      post "/signup" $ signupAction
 
       post "/message" $ do
         message :: Message <- jsonData
@@ -125,7 +124,6 @@ myapp chan0 outChan = do
     addHeaders [("test", "header")] $
     mapUrls $
           mount "sse" sse
-      <|> mountRoot signup
       <|> mountRoot web
 
 sseChan :: Chan Message -> Application
