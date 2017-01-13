@@ -11,6 +11,9 @@ import Data.Int (Int64)
 import Data.Maybe 
 import Control.Applicative
 import System.Environment
+import Data.Aeson
+import Data.ByteString.Lazy.Char8 as BL8
+
 data User = 
     User {
       userId :: Int64 -- id
@@ -18,6 +21,9 @@ data User =
     , userEmail :: Text -- email 
     }
   deriving Show
+
+instance ToJSON User where
+  toJSON (User i n e) = object [ "id" .= i, "username" .= n, "email" .= e ]
 
 
 getUserById :: Connection -> Int64 -> IO (Maybe User)
@@ -29,5 +35,5 @@ getUserById c uid =
 main = do
   [uid] <- getArgs
   c <- connectPostgreSQL "dbname=ether host=localhost"
-  r <- getUserById c (read uid)
-  print r
+  rs <- getUserById c (read uid)
+  mapM_ (BL8.putStrLn . encode) rs 
