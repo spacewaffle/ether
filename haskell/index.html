@@ -1,0 +1,20 @@
+<div id="root">
+  <div id="chatbox" class="messages" v-cloak>
+    <a href="http://localhost:8081/?chan=a">chan a</a>
+    <a href="http://localhost:8081/?chan=b">chan b</a>
+      <ul>
+        <li v-for="message in messages">
+          <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
+          {{message.name}}: <span v-html="message.body"></span>
+        </li>
+      </ul>
+      <input v-model='post' v-bind:value="'post'"
+             size="50"
+             placeholder="Write your message"
+             v-on:keyup.13="submit()"
+             type="text"/>
+  </div>
+</div>
+<script>
+  window.username = 'dan'
+</script>
