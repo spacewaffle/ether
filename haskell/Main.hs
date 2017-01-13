@@ -97,8 +97,7 @@ myapp :: Chan Message -> Chan Message -> IO Application
 myapp chan0 outChan = do
   let sse = sseChan chan0
   web <- scottyApp $ do 
-      get "/" $ do
-        file "index.html"
+      get "/" $ file "index.html"
       get "/login" $ loginAction
       post "/login" $ loginAction
       get "/signup" $ signupAction
@@ -113,13 +112,16 @@ myapp chan0 outChan = do
             now <- liftIO getCurrentTime
             mUser <- liftIO $ getUserById' uid
             case mUser of
-              (Just User{..}) -> do
-                let message' = message { time = Just now, chatName = Just username }
+              (Just u) -> do
+                let message' = message { time = Just now, chatName = Just (username u) }
                 liftIO $ writeChan outChan message'
               Nothing -> redirect "/login"
       get "/chan/:id" $ do
         -- this should present a backlog of n messages from the file
         undefined
+      get "/chats.js" $ do
+        setHeader "Content-Type" application/javascript"
+        file "chats.css"
       get "/style.css" $ do
         setHeader "Content-Type" "text/css"
         file "style.css"
