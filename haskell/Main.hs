@@ -132,8 +132,8 @@ myapp chan0 outChan = do
         file "reset.css"
   return $
     autohead $ 
-    logStdout $
-    addHeaders [("test", "header")] $
+    -- logStdout $
+    -- addHeaders [("test", "header")] $
     mapUrls $
           mount "sse" sse
       <|> mountRoot web
