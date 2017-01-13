@@ -68,7 +68,7 @@ instance FromJSON Message where
                       <*> v .: "body"
                       <*> v .: "chan"
                       <*> v .:? "time"
-        "join" -> Join <$> v .: "name" <*> v .: "chan" <*> v .:? "time"
+        "join" -> Join <$> v .:? "name" <*> v .: "chan" <*> v .:? "time"
         "leave" -> Leave <$> v .: "name" <*> v .: "chan" <*> v .:? "time"
         y -> error $ "Unrecognized Message type: " ++ show y
 
