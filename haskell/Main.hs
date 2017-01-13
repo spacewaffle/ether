@@ -111,6 +111,9 @@ myapp chan0 outChan = do
       get "/" $ file "index.html"
       get "/login" $ loginAction
       post "/login" $ loginAction
+      get "/logout" $ do
+        setHeader "Cookie" ""
+        redirect "/login"
       get "/signup" $ signupAction
       post "/signup" $ signupAction
 
@@ -124,7 +127,6 @@ myapp chan0 outChan = do
             mUser <- liftIO $ getUserById' uid
             case mUser of
               (Just u) -> do
-                liftIO $ putStrLn $ "Writing message for " ++ show u
                 let message' = message { time = Just now
                                        , chatName = (Just (username u)) }
                 liftIO $ writeChan outChan message'
