@@ -24,11 +24,12 @@ $(document).ready(function() {
         console.log("Submit: " + this.post);
         // TODO assign channels later
         var payload = {type: "chat_message", body: this.post, name: this.username, chan: chan};
-        $.post("/message", JSON.stringify(payload), function(data){$vm0.receivedMessage(data)});
+        this.$http.post('/message', JSON.stringify(payload)).then(function(response) {
+          this.receivedMessage(response.data);
+        }, function(response) {});
         this.post = "";
       },
       receivedMessage: function(data){
-        console.log("receiving message");
         switch(data.type){
           case "chat_message":
             this.postMessage(data);
@@ -37,7 +38,7 @@ $(document).ready(function() {
             this.setUsername(data);
           break;
           case "redirect":
-            window.location = window.location.host + data.url;
+            this.redirect(data);
           break;
         }
       },
@@ -54,11 +55,14 @@ $(document).ready(function() {
         var payload = {type: "askUsername"};
         $.post("/message", JSON.stringify(payload));
         console.log("asking for username");
+      },
+      redirect: function(data) {
+        window.location.href = window.location.origin + data.url;
       }
     },
     mounted: function() {
       Event.$on("message", this.receivedMessage);
-      this.askUsername();
+      // this.askUsername();
       $('#chatbox input').focus();
     }
 
