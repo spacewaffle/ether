@@ -18,7 +18,7 @@
 </head>
 <body>
 
-
+  <div id="outputText"></div>
   <div id="root">
     <div id="chatbox" class="messages" v-cloak>
       <a href="http://localhost:8081/?chan=a">chan a</a>
@@ -29,11 +29,15 @@
             {{message.name}}: <span v-html="message.body"></span>
           </li>
         </ul>
-        <input v-model='post' v-bind:value="'post'"
-               size="50"
-               placeholder="Write your message"
-               v-on:keyup.13="submit()"
-               type="text"/>
+        <div class="input_wrapper">
+            <img class="emojione emoji_menu" alt="" title=":grinning:" src="https://cdn.jsdelivr.net/emojione/assets/png/1f600.png?v=2.2.7">        
+          <input v-model="post"
+                 size="50"
+                 placeholder="Write your message"
+                 v-on:keyup.13="submit()"
+                 type="text"
+                 />
+        </div>
     </div>
   </div>
 </body>
