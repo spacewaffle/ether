@@ -24,6 +24,7 @@ import Network.Wai.EventSource
 import Network.Wai.EventSource.EventStream
 import Network.HTTP.Types (status200, hContentType)
 import Web.Scotty
+import qualified Web.Scotty as W
 import Control.Applicative
 import Data.Aeson
 import System.IO
@@ -92,6 +93,16 @@ instance ToJSON Message where
     , "time" .= t
     ]
 
+data Redirect = Redirect Text -- location
+
+instance ToJSON Redirect where
+  toJSON (Redirect x) = object [
+      "redirect" .= x
+    ]
+
+redirectTo :: Text -> ActionM ()
+redirectTo loc = W.json (Redirect loc)
+
 
 myapp :: Chan Message -> Chan Message -> IO Application
 myapp chan0 outChan = do
@@ -106,7 +117,7 @@ myapp chan0 outChan = do
       post "/message" $ do
         muid <- getSessionUserId 
         case muid of
-          Nothing -> redirect "/login"
+          Nothing -> redirectTo "/login"
           Just uid -> do
             message :: Message <- jsonData
             now <- liftIO getCurrentTime
@@ -117,7 +128,7 @@ myapp chan0 outChan = do
                 let message' = message { time = Just now
                                        , chatName = (Just (username u)) }
                 liftIO $ writeChan outChan message'
-              Nothing -> redirect "/login"
+              Nothing -> redirectTo "/login"
       get "/chan/:id" $ do
         -- this should present a backlog of n messages from the file
         undefined
