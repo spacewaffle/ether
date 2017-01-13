@@ -120,7 +120,7 @@ myapp chan0 outChan = do
         -- this should present a backlog of n messages from the file
         undefined
       get "/chats.js" $ do
-        setHeader "Content-Type" application/javascript"
+        setHeader "Content-Type" "application/javascript"
         file "chats.js"
       get "/style.css" $ do
         setHeader "Content-Type" "text/css"
