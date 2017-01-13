@@ -47,12 +47,12 @@ data Message =
       , time :: Maybe UTCTime
       } 
     | Join { 
-        joinName :: Text 
+        chatName :: Maybe Text 
       , chan :: Text
       , time :: Maybe UTCTime
       }
     | Leave { 
-        leaveName :: Text 
+        chatName :: Maybe Text 
       , chan :: Text
       , time :: Maybe UTCTime
       } deriving Show
@@ -113,7 +113,9 @@ myapp chan0 outChan = do
             mUser <- liftIO $ getUserById' uid
             case mUser of
               (Just u) -> do
-                let message' = message { time = Just now, chatName = Just (username u) }
+                liftIO $ putStrLn $ "Writing message for " ++ show u
+                let message' = message { time = Just now
+                                       , chatName = (Just (username u)) }
                 liftIO $ writeChan outChan message'
               Nothing -> redirect "/login"
       get "/chan/:id" $ do
