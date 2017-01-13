@@ -97,7 +97,8 @@ data Redirect = Redirect Text -- location
 
 instance ToJSON Redirect where
   toJSON (Redirect x) = object [
-      "redirect" .= x
+      "type" .= (String "redirect")
+    , "url" .= x
     ]
 
 redirectTo :: Text -> ActionM ()
