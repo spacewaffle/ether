@@ -17,7 +17,7 @@ $(document).ready(function() {
     data: {
       post: "",
       messages: [],
-      username: ""
+      username: "",
     },
     methods: {
       submit: function() {
@@ -32,7 +32,7 @@ $(document).ready(function() {
       previewEmoji: function(){
         console.log("previewing emoji");
         var preview = emojione.toImage(this.post);
-        $('#outputText').html(preview);
+        this.post = preview;
       },
       receivedMessage: function(data){
         switch(data.type){
