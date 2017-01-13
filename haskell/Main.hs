@@ -47,7 +47,7 @@ data Message =
       , chan :: Text
       , time :: Maybe UTCTime
       } 
-    | Join { 
+    | GetUsername { 
         chatName :: Maybe Text 
       , chan :: Text
       , time :: Maybe UTCTime
@@ -68,7 +68,8 @@ instance FromJSON Message where
                       <*> v .: "body"
                       <*> v .: "chan"
                       <*> v .:? "time"
-        "join" -> Join <$> v .:? "name" <*> v .: "chan" <*> v .:? "time"
+        "askUsername" -> GetUsername 
+              <$> v .:? "name" <*> v .: "chan" <*> v .:? "time"
         "leave" -> Leave <$> v .: "name" <*> v .: "chan" <*> v .:? "time"
         y -> error $ "Unrecognized Message type: " ++ show y
 
@@ -80,8 +81,8 @@ instance ToJSON Message where
     , "chan" .= chan
     , "time" .= time
     ]
-  toJSON (Join n ch t) = object [
-      "type" .= ("join" :: Text)
+  toJSON (GetUsername n ch t) = object [
+      "type" .= ("askUsername" :: Text)
     , "name" .= n
     , "chan" .= ch
     , "time" .= t
