@@ -96,10 +96,7 @@ instance ToJSON Message where
 data Redirect = Redirect Text -- location
 
 instance ToJSON Redirect where
-  toJSON (Redirect x) = object [
-      "type" .= (String "redirect")
-    , "url" .= x
-    ]
+  toJSON (Redirect x) = object [ "type" .= (String "redirect") , "url" .= x ]
 
 redirectTo :: Text -> ActionM ()
 redirectTo loc = W.json (Redirect loc)
