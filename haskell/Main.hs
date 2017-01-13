@@ -7,12 +7,16 @@ import qualified Data.ByteString.Char8 as B8
 import Data.Function (fix)
 import Data.Text (Text, pack)
 import qualified Data.Text.Encoding as T
+import qualified Data.Text.Lazy as TL
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Network.Wai.UrlMap
 import Network.Wai.Middleware.Autohead
 import Network.Wai.Middleware.RequestLogger
 import Network.Wai.Middleware.AddHeaders
+
+import Control.Monad.Trans.Maybe
+import Control.Monad.Trans.Class (lift)
 
 import Network.Wai
 import Network.HTTP.Types
@@ -94,6 +98,9 @@ instance ToJSON Message where
     , "time" .= t
     ]
 
+instance ToJSON User where
+  toJSON User{..} = object [ "username" .= username ]
+
 data Redirect = Redirect Text -- location
 
 instance ToJSON Redirect where
@@ -102,6 +109,16 @@ instance ToJSON Redirect where
 redirectTo :: Text -> ActionM ()
 redirectTo loc = W.json (Redirect loc)
 
+withUser :: (User -> ActionM ()) -> ActionM ()
+withUser f = do
+      muid <- getSessionUserId 
+      case muid of
+        Nothing -> redirectTo "/login"
+        Just uid -> do
+          mUser <- liftIO $ getUserById' uid
+          case mUser of
+            (Just u) -> f u
+            Nothing -> redirectTo "/login"
 
 myapp :: Chan Message -> Chan Message -> IO Application
 myapp chan0 outChan = do
@@ -116,20 +133,16 @@ myapp chan0 outChan = do
       get "/signup" $ signupAction
       post "/signup" $ signupAction
 
+      get "/user_info" $ 
+          withUser $ \user -> W.json user
+        
       post "/message" $ do
-        muid <- getSessionUserId 
-        case muid of
-          Nothing -> redirectTo "/login"
-          Just uid -> do
-            message :: Message <- jsonData
-            now <- liftIO getCurrentTime
-            mUser <- liftIO $ getUserById' uid
-            case mUser of
-              (Just u) -> do
-                let message' = message { time = Just now
-                                       , chatName = (Just (username u)) }
-                liftIO $ writeChan outChan message'
-              Nothing -> redirectTo "/login"
+        withUser $ \user -> do
+          now <- liftIO getCurrentTime
+          message :: Message <- jsonData
+          let message' = message { time = Just now , chatName = (Just (username user)) }
+          liftIO $ writeChan outChan message'
+
       get "/chan/:id" $ do
         -- this should present a backlog of n messages from the file
         undefined
