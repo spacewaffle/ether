@@ -62,7 +62,7 @@ $(document).ready(function() {
     },
     mounted: function() {
       Event.$on("message", this.receivedMessage);
-      // this.askUsername();
+      this.askUsername();
       $('#chatbox input').focus();
     }
 
