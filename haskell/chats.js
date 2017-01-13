@@ -53,8 +53,9 @@ $(document).ready(function() {
       },
       askUsername: function() {
         var payload = {type: "askUsername"};
-        $.post("/message", JSON.stringify(payload));
-        console.log("asking for username");
+        this.$http.post('/message', JSON.stringify(payload)).then(function(response) {
+          this.setUsername(response.data);
+        }, function(response) {});
       },
       redirect: function(data) {
         window.location.href = window.location.origin + data.url;
