@@ -112,7 +112,7 @@ myapp chan0 outChan = do
       get "/login" $ loginAction
       post "/login" $ loginAction
       get "/logout" $ do
-        setHeader "Cookie" ""
+        setHeader "Set-Cookie" ""
         redirect "/login"
       get "/signup" $ signupAction
       post "/signup" $ signupAction
