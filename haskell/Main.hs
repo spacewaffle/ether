@@ -121,7 +121,7 @@ myapp chan0 outChan = do
         undefined
       get "/chats.js" $ do
         setHeader "Content-Type" application/javascript"
-        file "chats.css"
+        file "chats.js"
       get "/style.css" $ do
         setHeader "Content-Type" "text/css"
         file "style.css"
