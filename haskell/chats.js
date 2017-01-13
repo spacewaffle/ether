@@ -24,16 +24,20 @@ $(document).ready(function() {
         console.log("Submit: " + this.post);
         // TODO assign channels later
         var payload = {type: "chat_message", body: this.post, name: this.username, chan: chan};
-        $.post("/message", JSON.stringify(payload));
+        $.post("/message", JSON.stringify(payload), function(data){$vm0.receivedMessage(data)});
         this.post = "";
       },
       receivedMessage: function(data){
+        console.log("receiving message");
         switch(data.type){
           case "chat_message":
             this.postMessage(data);
             break;
           case "askUsername":
             this.setUsername(data);
+          break;
+          case "redirect":
+            window.location = window.location.host + data.url;
           break;
         }
       },
@@ -54,7 +58,7 @@ $(document).ready(function() {
     },
     mounted: function() {
       Event.$on("message", this.receivedMessage);
-      // this.askUsername();
+      this.askUsername();
       $('#chatbox input').focus();
     }
 
