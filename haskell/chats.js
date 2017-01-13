@@ -23,35 +23,46 @@ $(document).ready(function() {
       submit: function() {
         console.log("Submit: " + this.post);
         // TODO assign channels later
-        var payload = {type: "chat_message", body: this.post, name: username, chan: chan};
+        var payload = {type: "chat_message", body: this.post, name: this.username, chan: chan};
         $.post("/message", JSON.stringify(payload));
         this.post = "";
       },
       receivedMessage: function(data){
-        if(data.type == "chat_message"){
-          data.body = emojione.toImage(data.body);
+        switch(data.type){
+          case "chat_message":
+            this.postMessage(data);
+            break;
+          case "askUsername":
+            this.setUsername(data);
+          break;
         }
+      },
+      postMessage: function(data){
+        data.body = emojione.toImage(data.body);
         this.messages.push(data);
         $(document).scrollTop($(document).height());
       },
-      setUsername: function() {
-        this.username = window.username;
-        $('#chatbox input').focus();
-        var payload = {type: "join", name: this.username, chan: chan};
-        $.post("/message", JSON.stringify(payload));
+      setUsername: function(data) {
         console.log("setting username");
+        this.username = data.name;
+      },
+      askUsername: function() {
+        var payload = {type: "askUsername"};
+        $.post("/message", JSON.stringify(payload));
+        console.log("asking for username");
       }
     },
     mounted: function() {
       Event.$on("message", this.receivedMessage);
-      this.setUsername();
+      // this.askUsername();
+      $('#chatbox input').focus();
     }
 
   });
 
   evtSource.onmessage = function(event) {
-    var data = JSON.parse(event.data)
-    console.log("evtSource incoming: " + event.data)
+    var data = JSON.parse(event.data);
+    console.log("evtSource incoming: " + event.data);
     Event.$emit("message", JSON.parse(event.data));
   };
 
