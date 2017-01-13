@@ -68,7 +68,7 @@ instance FromJSON Message where
     (v .: "type") >>= \x ->
       case x of 
         ("chat_message" :: Text) -> 
-          ChatMessage <$> v .: "name"
+          ChatMessage <$> v .:? "name"
                       <*> v .: "body"
                       <*> v .: "chan"
                       <*> v .:? "time"
