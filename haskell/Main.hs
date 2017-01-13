@@ -208,7 +208,7 @@ main = do
 
   outChan :: Chan Message <- newChan
   putStrLn "hello1"
-  (ClosedStream, fromTail, ClosedStream, cph) <- streamingProcess (proc "tail" ["-100", "-f", "log"])
+  (ClosedStream, fromTail, ClosedStream, cph) <- streamingProcess (shell "tail -f log")
   putStrLn "hello"
   let input = runConduit $ fromTail 
                         .| CB.lines
