@@ -10,32 +10,32 @@ $(document).ready(function() {
       chan = match && match[1];
 
   window.Event = new Vue();
-  var chan  = chan || "all" // change later to real channel number
+  var chan = chan || "all"; // change later to real channel number
 
   var postComponent = new Vue({
     el: "#chatbox",
-    data: { 
+    data: {
       post: "",
       messages: [],
       username: ""
     },
     methods: {
       submit: function() {
-        console.log("Submit: " + this.post)
+        console.log("Submit: " + this.post);
         // TODO assign channels later
-        var payload = {type: "chat_message", body: this.post, name: username, chan: chan}
+        var payload = {type: "chat_message", body: this.post, name: username, chan: chan};
         $.post("/message", JSON.stringify(payload));
         this.post = "";
       },
       receivedMessage: function(data){
         if(data.type == "chat_message"){
-          data.body = emojione.toImage(data.body)
+          data.body = emojione.toImage(data.body);
         }
         this.messages.push(data);
         $(document).scrollTop($(document).height());
       },
       setUsername: function() {
-        this.username = window.username
+        this.username = window.username;
         $('#chatbox input').focus();
         var payload = {type: "join", name: this.username, chan: chan};
         $.post("/message", JSON.stringify(payload));

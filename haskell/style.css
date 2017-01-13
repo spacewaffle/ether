@@ -1,0 +1,40 @@
+// Place all the styles related to the chats_controller controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+body{
+  font-size: 16px;
+  font-family: sans-serif;
+}
+ul {
+  list-style-type: none;
+  padding: 0px 0px 92px 15px;
+
+}
+
+li{
+  margin: 10px 0;
+  display: block;
+}
+
+[v-cloak] {
+  display: none;
+}
+
+input{
+  bottom: 0;
+  display: block;
+  position: absolute;
+  padding: 15px;
+  width: 100%;
+  font-size: 16px;
+}
+
+#root, #chatbox{
+  height: 100%;
+}
+
+#chatbox input{
+  position: fixed;
+}
+

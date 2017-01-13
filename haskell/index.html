@@ -1,20 +1,43 @@
-<div id="root">
-  <div id="chatbox" class="messages" v-cloak>
-    <a href="http://localhost:8081/?chan=a">chan a</a>
-    <a href="http://localhost:8081/?chan=b">chan b</a>
-      <ul>
-        <li v-for="message in messages">
-          <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
-          {{message.name}}: <span v-html="message.body"></span>
-        </li>
-      </ul>
-      <input v-model='post' v-bind:value="'post'"
-             size="50"
-             placeholder="Write your message"
-             v-on:keyup.13="submit()"
-             type="text"/>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>EtherApp</title>
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js"
+  integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+  crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/vue@2.1.6/dist/vue.js"></script>
+  <link rel="stylesheet" href="reset.css">
+
+  <script src="https://cdn.jsdelivr.net/emojione/2.2.7/lib/js/emojione.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/emojione/2.2.7/assets/css/emojione.min.css"/>
+
+  <link rel="stylesheet" href="style.css">
+  <script src="chats.js"></script>
+</head>
+<body>
+
+
+  <div id="root">
+    <div id="chatbox" class="messages" v-cloak>
+      <a href="http://localhost:8081/?chan=a">chan a</a>
+      <a href="http://localhost:8081/?chan=b">chan b</a>
+        <ul>
+          <li v-for="message in messages">
+            <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
+            {{message.name}}: <span v-html="message.body"></span>
+          </li>
+        </ul>
+        <input v-model='post' v-bind:value="'post'"
+               size="50"
+               placeholder="Write your message"
+               v-on:keyup.13="submit()"
+               type="text"/>
+    </div>
   </div>
-</div>
 <script>
-  window.username = 'dan'
+  window.username = 'dan';
 </script>
+</body>
+</html>
+
+
