@@ -75,7 +75,6 @@ createUser c (UserCreate u e p) = do
 createUser' :: UserCreate -> IO User
 createUser' x = withConnection (flip createUser x)
 
-
 loginAction :: ActionM ()
 loginAction = do
   r <- runForm "login" loginForm
