@@ -18,7 +18,7 @@
 </head>
 <body>
 
-
+  <div id="outputText"></div>
   <div id="root">
     <div id="chatbox" class="messages" v-cloak>
       <a href="http://localhost:8081/?chan=a">chan a</a>
@@ -33,6 +33,7 @@
                size="50"
                placeholder="Write your message"
                v-on:keyup.13="submit()"
+               @keyup="previewEmoji()"
                type="text"/>
     </div>
   </div>

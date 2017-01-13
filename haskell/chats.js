@@ -29,6 +29,11 @@ $(document).ready(function() {
         }, function(response) {});
         this.post = "";
       },
+      previewEmoji: function(){
+        console.log("previewing emoji");
+        var preview = emojione.toImage(this.post);
+        $('#outputText').html(preview);
+      },
       receivedMessage: function(data){
         switch(data.type){
           case "chat_message":
