@@ -26,10 +26,11 @@ import Cookie
 -- https://hackage.haskell.org/package/digestive-functors-lucid-0.0.0.4/docs/Text-Digestive-Lucid-Html5.html
 
 data User = 
-    User 
-      Int64 -- id
-      Text -- username
-      Text -- email 
+    User {
+      userId :: Int64 -- id
+    , username :: Text -- username
+    , userEmail :: Text -- email 
+    }
   deriving Show
 
 getUserById :: Connection -> Int64 -> IO (Maybe User)
@@ -38,6 +39,9 @@ getUserById c uid =
     >>= \xs -> 
       case xs of { (i, u, e):_ -> return (Just $ User i u e) ; _ -> return Nothing }
 
+
+getUserById' :: Int64 -> IO (Maybe User)
+getUserById' uid = withConnection (\c -> getUserById c uid)
 
 withConnection :: (Connection -> IO a) -> IO a
 withConnection f = do

@@ -37,11 +37,11 @@ import           Data.Conduit             (await, yield, (.|), runConduit)
 import qualified Data.Conduit.Binary      as CB
 import qualified Data.Conduit.List        as CL
 import           Data.Conduit.Process     
-
+import Cookie
 
 data Message = 
       ChatMessage {
-        chatName :: Text
+        chatName :: Maybe Text
       , chatBody :: Text
       , chan :: Text
       , time :: Maybe UTCTime
@@ -105,10 +105,18 @@ myapp chan0 outChan = do
       post "/signup" $ signupAction
 
       post "/message" $ do
-        message :: Message <- jsonData
-        now <- liftIO getCurrentTime
-        let message' = message { time = Just now }
-        liftIO $ writeChan outChan message'
+        muid <- getSessionUserId 
+        case muid of
+          Nothing -> redirect "/login"
+          Just uid -> do
+            message :: Message <- jsonData
+            now <- liftIO getCurrentTime
+            mUser <- liftIO $ getUserById' uid
+            case mUser of
+              (Just User{..}) -> do
+                let message' = message { time = Just now, chatName = Just username }
+                liftIO $ writeChan outChan message'
+              Nothing -> redirect "/login"
       get "/chan/:id" $ do
         -- this should present a backlog of n messages from the file
         undefined
