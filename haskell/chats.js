@@ -53,7 +53,7 @@ $(document).ready(function() {
       },
       askUsername: function() {
         var payload = {type: "askUsername"};
-        this.$http.post('/user_info', JSON.stringify(payload)).then(function(response) {
+        this.$http.get('/user_info', JSON.stringify(payload)).then(function(response) {
           this.setUsername(response.data.username);
         }, function(response) {});
       },
