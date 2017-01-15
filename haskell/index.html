@@ -10,31 +10,30 @@
   <link rel="stylesheet" href="reset.css">
 
   <script src="https://cdn.jsdelivr.net/emojione/2.2.7/lib/js/emojione.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/5.0.1/Rx.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/emojione/2.2.7/assets/css/emojione.min.css"/>
 
   <link rel="stylesheet" href="style.css">
   <script src="chats.js"></script>
 </head>
 <body>
-
-  <div id="outputText"></div>
   <div id="root">
     <div id="chatbox" class="messages" v-cloak>
-      <a href="http://localhost:8081/?chan=a">chan a</a>
-      <a href="http://localhost:8081/?chan=b">chan b</a>
-      <ul>
+      <ul v-on:click="hideEmojiBox()">
+        <a href="http://localhost:8081/?chan=a">chan a</a>
+        <a href="http://localhost:8081/?chan=b">chan b</a>
         <li v-for="message in messages">
           <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
           {{message.name}}: <span v-html="message.body"></span>
         </li>
       </ul>
+      <div class="scroll_target"></div>
       <div class="input_wrapper">
         <emoji></emoji>
         <input v-model="post"
                size="50"
                placeholder="Write your message"
                v-on:keyup.13="submit()"
+               v-on:click="hideEmojiBox()"
                type="text"
                />
       </div>
