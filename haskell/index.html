@@ -23,21 +23,21 @@
     <div id="chatbox" class="messages" v-cloak>
       <a href="http://localhost:8081/?chan=a">chan a</a>
       <a href="http://localhost:8081/?chan=b">chan b</a>
-        <ul>
-          <li v-for="message in messages">
-            <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
-            {{message.name}}: <span v-html="message.body"></span>
-          </li>
-        </ul>
-        <div class="input_wrapper">
-            <img class="emojione emoji_menu" alt="" title=":grinning:" src="https://cdn.jsdelivr.net/emojione/assets/png/1f600.png?v=2.2.7">        
-          <input v-model="post"
-                 size="50"
-                 placeholder="Write your message"
-                 v-on:keyup.13="submit()"
-                 type="text"
-                 />
-        </div>
+      <ul>
+        <li v-for="message in messages">
+          <span v-if="message.type != 'chat_message'">[{{message.type}}]</span>
+          {{message.name}}: <span v-html="message.body"></span>
+        </li>
+      </ul>
+      <div class="input_wrapper">
+        <emoji></emoji>
+        <input v-model="post"
+               size="50"
+               placeholder="Write your message"
+               v-on:keyup.13="submit()"
+               type="text"
+               />
+      </div>
     </div>
   </div>
 </body>
