@@ -1,11 +1,12 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards, ScopedTypeVariables, BangPatterns #-} 
 module Main where
 import User
-import Blaze.ByteString.Builder.Char.Utf8  (fromText)
+import qualified Blaze.ByteString.Builder as Builder 
 import qualified Data.ByteString.Lazy.Char8 as BL8
 import qualified Data.ByteString.Char8 as B8
 import Data.Function (fix)
 import Data.Text (Text, pack)
+import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.Text.Lazy as TL
 import Network.Wai
@@ -122,7 +123,7 @@ withUser f = do
 
 myapp :: Chan Message -> Chan Message -> IO Application
 myapp chan0 outChan = do
-  let sse = sseChan chan0
+  let sse = sseChan 
   web <- scottyApp $ do 
       get "/" $ file "index.html"
       get "/login" $ loginAction
@@ -163,31 +164,33 @@ myapp chan0 outChan = do
           mount "sse" sse
       <|> mountRoot web
 
-sseChan :: Chan Message -> Application
-sseChan chan0 req sendResponse = do
-    chan' <- liftIO $ dupChan chan0
-    myEventSourceApp (readChan chan') req sendResponse
+sseChan :: Application
+sseChan req sendResponse = do
+    myEventSourceApp req sendResponse
   where
-    myEventSourceApp :: IO Message -> Application
-    myEventSourceApp src req sendResponse = do
+    myEventSourceApp :: Application
+    myEventSourceApp req sendResponse = do
         let q = queryToQueryText $ queryString req
             chanName = fromMaybe "all" $ join $ lookup "chan" q
+            chanFile = T.unpack ("chan/" <> chanName)
+        putStrLn $ "tail -f " ++ chanFile
+        (ClosedStream, fromTail, ClosedStream, cph) <- streamingProcess (shell $ "tail -f " ++ chanFile)
+        writeFile chanFile ""
         sendResponse $ responseStream
             status200
             [(hContentType, "text/event-stream")]
-            $ \sendChunk flush -> fix $ \loop -> do
-                m :: Message <- src
-                let se = filterChan chanName m
-                         >>= Just . mkServerEvent
-                         >>= eventToBuilder
-                case se of
-                    Nothing -> loop
-                    Just b  -> sendChunk b >> flush >> loop
+            $ \sendChunk flush -> do
+                runConduit $ fromTail 
+                    .| CB.lines
+                    .| CL.mapM_
+                    (\bs -> do
+                      let bs' = Builder.fromByteString bs
+                      case eventToBuilder (ServerEvent Nothing Nothing [bs']) of
+                        Nothing -> return ()
+                        Just b -> sendChunk b >> flush 
+                    )
 
-mkServerEvent :: Message -> ServerEvent
-mkServerEvent m = 
-    let json = T.decodeUtf8 . BL8.toStrict $ encode m
-    in ServerEvent Nothing Nothing [fromText json]
+
 
 filterChan :: Text -> Message -> Maybe Message
 filterChan "all" x = Just x
@@ -207,9 +210,7 @@ main = do
   chan0 :: Chan Message <- newChan 
 
   outChan :: Chan Message <- newChan
-  putStrLn "hello1"
   (ClosedStream, fromTail, ClosedStream, cph) <- streamingProcess (shell "tail -f log")
-  putStrLn "hello"
   let input = runConduit $ fromTail 
                         .| CB.lines
                         .| CL.mapM_
